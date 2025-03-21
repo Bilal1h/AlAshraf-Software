@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add House</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://kit.fontawesome.com/7b39153ed3.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="bg-gray-900 text-gray-200 flex justify-center items-center min-h-screen">
+  <div class="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold text-center mb-4">Add A House</h1>
+    <form action="/<%=Year%>/<%=monthName%>/<%=categoryName%>/addhouse" method="post" class="space-y-4">
+      
+      <input type="text" name="housename" placeholder="House Name" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      
+      <input type="text" name="ownername" placeholder="Owner Name" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      
+      <input type="text" name="ownernumber" placeholder="Owner Phone Number" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      
+      <label for="selectcategory" class="block text-gray-300">Select a Category</label>
+      <select name="selectcategory" id="selectcategory" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none">
+        <% categories.forEach(e=> { %>
+          <option value="<%= e.name %>" <%=e.name===categoryName ? "selected" : "" %>><%= e.name %></option>
+        <% }); %>
+      </select>
+      
+      <input type="number" name="totalammountofhouse" placeholder="Amount to be collected" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      
+      <label for="floors" class="block text-gray-300">Construction</label>
+      <select name="floors" id="floors" class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none">
+        <option value="0">Plot</option>
+        <option value="1">G</option>
+        <option value="2">G + 1</option>
+        <option value="3">G + 2</option>
+        <option value="4">G + 3</option>
+        <option value="5">G + 4</option>
+      </select>
+      
+      <label for="isamountcollected" class="block text-gray-300">Is the Amount Paid?</label>
+      <select name="isammountcollected" id="isamountcollected" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none">
+        <option value="true">True</option>
+        <option value="false">False</option>
+      </select>
+      
+      <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition">Add House</button>
+    </form>
+  </div>
+</body>
+
+</html>

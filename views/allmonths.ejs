@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Months</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 flex flex-col items-center justify-center min-h-screen p-6">
+
+    <!-- Profile Card -->
+    <div class="bg-white shadow-2xl rounded-lg p-8 w-full max-w-sm text-center transform transition duration-500 hover:scale-105">
+        <div class="flex flex-col items-center">
+            <img class="w-24 h-24 rounded-full border-4 border-indigo-500 shadow-lg" src="https://e7.pngegg.com/pngimages/550/997/png-clipart-user-icon-foreigners-avatar-child-face.png" alt="Profile Picture">
+            <p class="text-2xl font-bold mt-4 text-gray-800"><%= usernames.username %></p>
+            <p class="text-gray-500">@<%= usernames.username %></p>
+        </div>
+    </div>
+
+    <!-- Month Buttons -->
+    <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl w-full">
+        <script>
+            const months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            const currentYear = new Date().getFullYear();
+            months.forEach(month => {
+                document.write(`
+                    <a href="/${currentYear}/month/${month}" class="bg-white text-gray-800 py-4 px-6 rounded-lg shadow-lg hover:bg-indigo-500 hover:text-white transition transform hover:scale-105 font-semibold text-lg text-center">
+                        ${month}
+                    </a>
+                `);
+            });
+        </script>
+    </div>
+
+</body>
+</html>

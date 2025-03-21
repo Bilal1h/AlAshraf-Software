@@ -1,0 +1,2774 @@
+A category 136 plots per/month ( 4000 Rs , additional per/floor 1000 Rs ) 68 plots blank ( 38 plots ground +1 ) , (30 ground) {30*4000 + 38*5000}
+Total to be collected from A category = 544000 rs.
+
+B category 63 plots  per/month ( 5000 Rs , additional per/floor 1000 Rs ) 33 plots blank ,( 15 ground +1 ) , (1 ground) {1*5000 + 15*6000}
+Total to be collected from B category = 315000 rs.
+
+R category 29 plots  per/month ( 3000 Rs , additional per/floor 1000 Rs ) 5 plots blank ,( 20 ground +1 ) , (4 ground) {4*3000 + 20*4000}
+Total to be collected from B category = 87000 rs.
+
+C (commercial) category 13 plots per/month( 0 )
+
+
+TOTAL AMOUNT TO BE COLLECTED IN EACH MONTH = 497000 Rs.
+
+
+Now i want to create another route to add 29 houses in R category in each month , meaning that in total 348 documents will be created, well in the 29 documents of each month, put the "amount_to_be_collected" value of first 5 plots as "0",  put the "amount_to_be_collected" value of next 20 plots as "basevalue + 1000" which means that these 15 plots will contain floor value as 1, and now keep the left 4 plot's "amount_to_be_collected" value as "baseValue"
+Well keep the same logic in all months so if i tell in you complete summary
+in total 348 documents there will be  "60" plots empty, in which each month contains "5" empty plots, same for the (+1 Ground floor houses) and (Ground floor houses)
+So please create a route to make such a huge amount of houses.
+
+
+
+Floors 0-9
+
+
+
+
+
+
+
+
+
+
+
+
+
+Basically I want that I want to customize each_house_category model in a way that it should contain house name, ammount to be collected , is amount collected, month name, category ka name, no. floors , parentCategoryID
+
+Now the floors logic is something different, the default value of floor should be set to zero, and after each addition in floor's value, the value of "ammount to be collected" should be incremented with "1000" , meaning that if on floor 0 , and the base price of to be collected is "5000" , same if the floor value is selected to 1 , so the "ammount to be collected" should increament with 1000 resulting in storing as 6000.
+i hope you understand.
+
+The index.js file is opened hereother files include each_house_category.js (model)
+const mongoose = require("mongoose");
+
+const each_house_category_Schema = new mongoose.Schema({
+    name: String,
+    amount_to_be_collected: Number,
+    is_amount_collected: Boolean,
+    category: String,
+    month: String,
+    floors: Number,
+    monthId: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "months"
+    }],
+    date: { type: Date, default: Date.now },
+    ParentHouseid: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "house_category"
+    },
+});
+
+module.exports = mongoose.model("each_house_category", each_house_category_Schema);
+
+and here is show_houses.ejs
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Show Houses</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+</head>
+
+<body class="bg-blue-700 text-white">
+  <div class="w-full h-36 flex items-center justify-center mb-12 flex-col">
+    <h1 class="text-5xl">All <%= houses.category %> Houses</h1>
+    <a href="/<%=month%>/<%=category%>/addhouse" class="w-60 bg-indigo-700 text-md mt-4 px-4 rounded-md text-center">Add House</a>
+  </div>
+  </div>
+
+ 
+  <div class="w-full flex justify-center items-center">
+    <div class="w-[95%] overflow-x-hidden"> 
+      <table id="myTable" class="w-full">
+        <thead>
+          <tr class="text-white">
+            <th class="p-3">Date</th>
+            <th class="p-3">House Name</th>
+            <th class="p-3">Category</th>
+            <th class="p-3">Amount to be Collected</th>
+            <th class="p-3">Is Amount Paid?</th>
+            <th class="p-3">Additionals?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% houses.forEach(function(elem) { %>
+            <tr class="text-white">
+              <td class="p-3"><%= elem.date ? new Date(elem.date).toISOString().split('T')[0] : "N/A" %></td>
+              <td class="p-3"><%= elem.name %></td>
+              <td class="p-3"><%= elem.category %></td>
+              <td class="p-3"><%= elem.amount_to_be_collected %></td>
+              <td class="p-3"><%= elem.is_amount_collected ? "Yes" : "No" %></td>
+              <td class="p-3">
+                <a href="/edit/status/<%= elem.name %>">
+                  <code class="bg-blue-900 px-2 text-white rounded">Edit Status</code>
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" 
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+  <script>
+    let table = new DataTable('#myTable');
+  </script>
+</body>
+
+</html>
+
+And here is add_house.ejs
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add House</title>
+  <link rel="stylesheet" href="/stylesheets/style.css" />
+  <script src="https://kit.fontawesome.com/7b39153ed3.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+  <div class="form add_house">
+    <form action="/<%=monthName%>/<%=categoryName%>/addhouse" method="post">
+      <!-- heading -->
+      <h1>Add A House</h1>
+
+      <!-- input fields start -->
+      <input type="text" placeholder="House Name" name="housename" />
+      <label for="selectcategory">Select a Category</label>
+      <select name="selectcategory" id="selectcategory">
+        <% categories.forEach(e=> { %>
+          <option value="<%= e.name %>" <%=e.name===categoryName ? "selected" : "" %>><%= e.name %>
+          </option>
+          <% }); %>
+      </select>
+
+      <input type="number" placeholder="Amount to be collected" name="totalammountofhouse" />
+      <label for="isamountcollected">Is the Amount Paid?</label>
+      <select name="isammountcollected" id="isamountcollected">
+        <option value="true">True</option>
+        <option value="false">False</option>
+      </select>
+
+      <button type="submit">Add a category</button>
+      <!-- input fields end -->
+    </form>
+  </div>
+</body>
+
+</html>
+
+Here is everything i had provided you please help mee
+
+
+
+Well again something different, in the houses_category model there should be another key which contains that what amount to be taken from each hose of that category
+means that from A Category (We will charge 4000) From B Category (We will charge 5000) and from R Category (We will charge 3000) and from C Category (We will charge 0)
+Here is the route i created to make categories documents in an easier way
+router.get("/createcat", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const categories = ["A", "B", "R", "C"];
+  const amounts = [310000, 95000, 92000, 0];
+
+  for (const month of months) {
+    const monthofthiscategory = await monthsModel.findOne({ name: month });
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const amount = amounts[i];
+      const newCategory = await houseCategoryModel.create({
+        name: category,
+        ammount_to_be_collected: amount,
+        month: month,
+        monthId: monthofthiscategory._id
+      });
+      await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+    }
+  }
+
+  res.send("Categories created successfully");
+});
+
+Please customize this route to create something i had mentioned above
+Here is the house_category.js (model)
+const mongoose = require("mongoose");
+
+const house_category_Schema = new mongoose.Schema({
+    name:String,
+    ammount_to_be_collected:Number,
+    month:String,
+    monthId: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "months"
+    }],
+    data: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "each_house_category"
+    }]
+});
+
+module.exports = mongoose.model("house_category",house_category_Schema);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.get("/createhouses", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const category = "A";
+  const baseValue = 4000; // Base value for the "A" category
+
+  for (const month of months) {
+    const category_of_that_month = await houseCategoryModel.findOne({ month: month, name: category });
+
+    // Create 68 plots with amount_to_be_collected as 0
+    for (let i = 0; i < 68; i++) {
+      await houseModel.create({
+        name: `A${i + 1}`,
+        amount_to_be_collected: 0,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 38 plots with amount_to_be_collected as baseValue + 1000 (floors = 1)
+    for (let i = 68; i < 106; i++) {
+      await houseModel.create({
+        name: `A${i + 1}`,
+        amount_to_be_collected: baseValue + 1000,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 1,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 30 plots with amount_to_be_collected as baseValue (floors = 0)
+    for (let i = 106; i < 136; i++) {
+      await houseModel.create({
+        name: `A${i + 1}`,
+        amount_to_be_collected: baseValue,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+  }
+
+  res.send("Houses A created successfully");
+});
+
+
+
+router.get("/createhousesB", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const category = "B";
+  const baseValue = 5000; // Base value for the "B" category
+
+  for (const month of months) {
+    const category_of_that_month = await houseCategoryModel.findOne({ month: month, name: category });
+
+    // Create 33 plots with amount_to_be_collected as 0
+    for (let i = 0; i < 33; i++) {
+      await houseModel.create({
+        name: `B${i + 1}`,
+        amount_to_be_collected: 0,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 15 plots with amount_to_be_collected as baseValue + 1000 (floors = 1)
+    for (let i = 33; i < 48; i++) {
+      await houseModel.create({
+        name: `B${i + 1}`,
+        amount_to_be_collected: baseValue + 1000,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 1,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 15 plots with amount_to_be_collected as baseValue (floors = 0)
+    for (let i = 48; i < 63; i++) {
+      await houseModel.create({
+        name: `B${i + 1}`,
+        amount_to_be_collected: baseValue,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+  }
+
+  res.send("Houses created successfully");
+});
+
+
+
+router.get("/createhousesR", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const category = "R";
+  const baseValue = 3000; // Base value for the "R" category
+
+  for (const month of months) {
+    const category_of_that_month = await houseCategoryModel.findOne({ month: month, name: category });
+
+    // Create 5 plots with amount_to_be_collected as 0
+    for (let i = 0; i < 5; i++) {
+      await houseModel.create({
+        name: `R${i + 1}`,
+        amount_to_be_collected: 0,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 20 plots with amount_to_be_collected as baseValue + 1000 (floors = 1)
+    for (let i = 5; i < 25; i++) {
+      await houseModel.create({
+        name: `R${i + 1}`,
+        amount_to_be_collected: baseValue + 1000,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 1,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+
+    // Create 4 plots with amount_to_be_collected as baseValue (floors = 0)
+    for (let i = 25; i < 29; i++) {
+      await houseModel.create({
+        name: `R${i + 1}`,
+        amount_to_be_collected: baseValue,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+  }
+
+  res.send("Houses created successfully");
+});
+
+
+
+router.get("/createhousesC", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const category = "C";
+  const baseValue = 0; // Base value for the "C" category
+
+  for (const month of months) {
+    const category_of_that_month = await houseCategoryModel.findOne({ month: month, name: category });
+
+    // Create 13 plots with amount_to_be_collected as 0
+    for (let i = 0; i < 13; i++) {
+      await houseModel.create({
+        name: `C${i + 1}`,
+        amount_to_be_collected: baseValue,
+        is_amount_collected: false,
+        category: category,
+        month: month,
+        floors: 0,
+        ParentHouseid: category_of_that_month._id
+      });
+    }
+  }
+
+  res.send("Houses created successfully");
+});
+
+
+
+
+
+
+
+router.get("/createcat", async function(req, res) {
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const categories = ["A", "B", "R", "C"];
+  const amounts = [544000, 315000, 87000, 0];
+  const amountPerHouse = [4000, 5000, 3000, 0]; // Amount to be taken from each house for each category
+
+  for (const month of months) {
+    const monthofthiscategory = await monthsModel.findOne({ name: month });
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const amount = amounts[i];
+      const perHouseAmount = amountPerHouse[i];
+      const newCategory = await houseCategoryModel.create({
+        name: category,
+        ammount_to_be_collected: amount,
+        month: month,
+        monthId: monthofthiscategory._id,
+        amount_per_house: perHouseAmount // Set the amount to be taken from each house
+      });
+      await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+    }
+  }
+
+  res.send("Categories created successfully");
+});
+
+
+
+router.get("/createmonth", async function(req,res){
+  
+})
+
+
+
+
+Well i just update the value of floors of A69 it although it updates the value of floor but the value of "amount_to_be_collected" is not incremented , according to the logic, i made teh floor from 1 to 2, but it still shows "5000" in "amount_to_be_collected", although it should be "6000".
+Why that happens?? fix it
+
+
+
+
+
+
+
+Well create a home page of this whole site, let me explain what i want to add in this, actually the previous ones i built is for the admin dashboard, now i want to make a home page for the public views, basically this will contain a simple home page with a main heading "Arshad Society Inventory Management System"
+now after this i want a button which says that check your house paying status, well this button will redirect to a simple ejs page which requires some inputs , well here a conditional logic will appear, meaning that the user will redirect to a page which contains some inputs regarding there house, also the current month in which we are , the user will select a category from a select tag which says (A , B, R, C) Then it asks their house name  that house name field contains a placeholder of (A-1) like as an example that the user have to enter there house in this format, if they enter any other query then they should be again redirected to the check status page with an alert that (Enter your house number in the required format) , after that if the user had entered every detail correctly, then they should be redirect to another file named "show_status.ejs" well that show_status.ejs will show the complete status of the house which is inputed, and most importantly there "is_amount_collected" query that if they had paid for or not...
+
+Just as simple i want i had made the necessary files, now create all the routes and ejs file codes to make it
+
+
+
+
+
+
+Well in this code i want that it should filter values based on months, means right now i am in  "/show/January/category/A/data" route, and it is showing me the houses of every month, although i want that if the URL is different from others so it should filter the values, means on every month's page, it should only show 136 plots
+here is the router's code
+
+// Show House Routes
+router.get("/show/:month/category/:category/data", isLoggedIn, async function (req, res, next) {
+  const houses = await houseModel.find({ category: req.params.category});
+
+  res.render("show_houses", { houses: houses,month:req.params.month,category:req.params.category });
+});
+
+
+//Edit House Categories
+
+// Edit House Status
+router.get("/edit/status/:housename", isLoggedIn, async function (req, res, next) {
+  try {
+    // Find the house by name
+    const house = await houseModel.findOne({ name: req.params.housename });
+
+    // Render the edit form with house details
+    res.render("edit_house", { product: house });
+  } catch (error) {
+    console.error("Error fetching house data:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+
+
+
+
+
+Ok so now i want to customize the each_house_category model, with the following data
+S.NO  | PLOT NO |   NAME WITH S/O W/O D/O                              |    CONSTRUCTION | SHARE TYPE MEMBERSHIP NO |  CONTACT NO. 
+this data will be for each house, well now i will give you the whole data, based on that generate a route that will create this datain a loop, bascially you can craete an array of objects containing all the data, well the first step would be make the each_house_category model, for that model i had provided you the required data, also also also please create a loop and then category would be R for the month of january, also fo the all of months, So in short if in January 29 houses are being created so in total 12 months, "348" houses will be created in which each 29 of them consists the data from that table, 
+Also i had already created the each_house_category model so make sure that the values already in it will be there as it is, only the things from the table will be added in that model
+Pleas create such loop here is the data
+S.NO  | PLOT NO |   NAME WITH S/O W/O D/O                              |    CONSTRUCTION | SHARE TYPE MEMBERSHIP NO |  CONTACT NO.
+1     |  R - 1  |  MR M. ADNAN MAIRAJ S\O MAIRAJUDDIN                  |    G            | R 16                     | 0300 2565512
+2     |  R - 2  |  MR. NADEEM AHMED S/O S. FAIZ UL HASAN               |   G             | R - 551                  | blank
+3     |  R - 2 A|  MR. S. TARIQ JAMAL HASHMI S/O S. JAMAL AHMED HASHMI |    G            | R - 991                  | blank
+4     |  R - 3  |   MR. M. ILYAS S/O M. RAUF                           |    G + 2        | R - 523                  | blank
+5     |  R -3 A |   MRS. ZAIN UL EBAD W/O S. ZAINUL EBAD               |     G + 1       | R - 623                  | blank
+6     |  R - 4  |   HAFIZ M. RAFIQ S/O KHUSHI MUHAMMAD                 |    G + 1        | R - 25                   | blank
+7     |  R - 4 A|   MRS. ABIDA RAHAT W/O M. RAHAT                      |   G             | R - 624                  | blank
+8     |  R - 4 B|  blank                                               |   plot (0)      | blank                    | blank 
+9     |  R - 5  |   MRS. MUSHKBAR FATIMA W/O FARAZ AHMED               |   G             | R - 552                  | blank
+10    | R - 6   |  MR. ZEESHAN MUMTAZ S/O MUMTAZ AHMED                 |   G + 1         | R - 23                   | blank
+11    | R - 7   |  MRS. KULSOOM BEGUM W/O M. HANIF                     |    G            | R - 311                  | blank
+12    | R - 8   |  MRS. ANUM SALMAN W/O AHMAD SALMAN                   |    G + 1        | R - 530                  | blank
+13    | R - 9   |  MR. M. UMAIR S/O M. SALEEM                          |    G + 2        | R - 548                  | blank
+14    | R - 10  |  MR. SALIMULLAH S/O AMANULLAH                        |    G            | R - 301                  | blank
+15    | R - 11  |  MR. M. MAAZ S/O ABDUL RAHIM                         |    G            | R - 507                  | blank
+16    | R - 12  |  MR. ZAIN UL ABEDIN S/O SYED MUJEEB ULLAH            |    G + 1        | R - 553                  | blank
+17    | R - 13  |  MR. M. MIAN S/O AJAN MIAN                           |    G + 1        | R - 544                  | blank
+18    | R - 14  |  blank                                               |   plot (0)      | blank                    | blank
+19    | R - 15  |  MRS. SALMA KHATOON W/O M. ADNAN MAIRAJ              |    G            | R - 542                  | blank
+20    | R - 16  |  MR. ASADULLAH KHAN S/O FEROZ KHAN                   |    G + 1        | R - 538                  | blank
+21    | R - 17  |  blank                                               |   plot (0)      | blank                    | blank
+22    | R - 18  |  blank                                               |   plot (0)      | blank                    | blank
+23    | R - 19  |  blank                                               |   plot (0)      | blank                    | blank
+24    | R - 20  |  MR. ISHAQ USMANI S/O USMAN GHANI                    |   G + 1         | R - 500                  | blank
+25    | R - 21  |  MRS. SHAGUFTA W/O TANVEER                           |   G + 2         | R - 524                  | blank
+26    | R - 22  |  MR. S. NOORAN SHAH S/O                              |   G + 1         | R - 159                  | blank
+27    | R - 23  |  M. ADNAN MAIRAJ S/O MAIRAJUDDIN                     |   G + 2         | R - 338                  | blank
+28    | R - 24  |  M. FAROOQ JAMIL S/O M. JAMIL QURESHI                |   G + 1         | R - 514                  | blank
+29    | R - 25  |  blank                                               |   blank         | blank                    | blank 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+First of all create all months on the basis of years
+with this code
+
+router.get("/createmonthfor2025", async function(req,res){
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const year = "2025"
+months.forEach(async (month) => {
+  await monthsModel.create({
+    name:month,
+    currentYear:year,
+    ammount_to_be_collected:946000
+  })
+})    
+})
+
+router.get("/createmonthfor2026", async function(req,res){
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const year = "2026"
+months.forEach(async (month) => {
+  await monthsModel.create({
+    name:month,
+    currentYear:year,
+    ammount_to_be_collected:946000
+  })
+})    
+})
+
+
+Ok so this
+Step has been done, means months are created now, so for now i had to create categories and it's code is
+
+router.get("/createcat2025", async function(req, res) {
+  const months = monthsModel.find({Year:"2025"})
+  const categories = ["A", "B", "R", "C"];
+  const amounts = [310000, 95000, 92000, 0];
+
+  for (const month of months) {
+    const monthofthiscategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const amount = amounts[i];
+      const newCategory = await houseCategoryModel.create({
+        name: category,
+        Year:"2025",
+        ammount_to_be_collected: amount,
+        month: month.name,
+        monthId: monthofthiscategory._id
+      });
+      await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+    }
+  }
+
+  res.send("Categories created successfully");
+});
+
+router.get("/createcat2026", async function(req, res) {
+  const months = monthsModel.find({Year:"2026"})
+  const categories = ["A", "B", "R", "C"];
+  const amounts = [310000, 95000, 92000, 0];
+
+  for (const month of months) {
+    const monthofthiscategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const amount = amounts[i];
+      const newCategory = await houseCategoryModel.create({
+        name: category,
+        Year:"2026",
+        ammount_to_be_collected: amount,
+        month: month.name,
+        monthId: monthofthiscategory._id
+      });
+      await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+    }
+  }
+
+  res.send("Categories created successfully");
+});
+
+
+
+
+Now create Houses Loop by this code
+
+
+router.get("/addhousesR2025", async function (req, res, next) {
+  try {
+       const months = await monthsModel.find({Year:"2026"});
+
+    const category = "R";
+
+    const plotNumbers = [
+      "R - 1", "R - 2", "R - 2A", "R - 3", "R - 3A", "R - 4", "R - 4A",
+      "R - 4B", "R - 5", "R - 6", "R - 7", "R - 8", "R - 9", "R - 10",
+      "R - 11", "R - 12", "R - 13", "R - 14", "R - 15", "R - 16",
+      "R - 17", "R - 18", "R - 19", "R - 20", "R - 21", "R - 22",
+      "R - 23", "R - 24", "R - 25"
+    ];
+
+    const namesArray = [
+      "MR M. ADNAN MAIRAJ S/O MAIRAJUDDIN", "MR. NADEEM AHMED S/O S. FAIZ UL HASAN",
+      "MR. S. TARIQ JAMAL HASHMI S/O S. JAMAL AHMED HASHMI", "MR. M. ILYAS S/O M. RAUF",
+      "MRS. ZAIN UL EBAD W/O S. ZAINUL EBAD", "HAFIZ M. RAFIQ S/O KHUSHI MUHAMMAD",
+      "MRS. ABIDA RAHAT W/O M. RAHAT", "", "MRS. MUSHKBAR FATIMA W/O FARAZ AHMED",
+      "MR. ZEESHAN MUMTAZ S/O MUMTAZ AHMED", "MRS. KULSOOM BEGUM W/O M. HANIF",
+      "MRS. ANUM SALMAN W/O AHMAD SALMAN", "MR. M. UMAIR S/O M. SALEEM",
+      "MR. SALIMULLAH S/O AMANULLAH", "MR. M. MAAZ S/O ABDUL RAHIM",
+      "MR. ZAIN UL ABEDIN S/O SYED MUJEEB ULLAH", "MR. M. MIAN S/O AJAN MIAN", "",
+      "MRS. SALMA KHATOON W/O M. ADNAN MAIRAJ", "MR. ASADULLAH KHAN S/O FEROZ KHAN",
+      "", "", "", "MR. ISHAQ USMANI S/O USMAN GHANI", "MRS. SHAGUFTA W/O TANVEER",
+      "MR. S. NOORAN SHAH S/O", "M. ADNAN MAIRAJ S/O MAIRAJUDDIN",
+      "M. FAROOQ JAMIL S/O M. JAMIL QURESHI", ""
+    ];
+
+    const floorsArray = [
+      "G", "G", "G", "G + 2", "G + 1", "G + 1", "G", "Plot", "G", "G + 1",
+      "G", "G + 1", "G + 2", "G", "G", "G + 1", "G + 1", "Plot", "G",
+      "G + 1", "Plot", "Plot", "Plot", "G + 1", "G + 2", "G + 1", "G + 2", "G + 1", ""
+    ];
+
+    const shareTypeMembership = [
+      "R 16", "R - 551", "R - 991", "R - 523", "R - 623", "R - 25",
+      "R - 624", "blank", "R - 552", "R - 23", "R - 311", "R - 530",
+      "R - 548", "R - 301", "R - 507", "R - 553", "R - 544", "blank",
+      "R - 542", "R - 538", "blank", "blank", "blank", "R - 500",
+      "R - 524", "R - 159", "R - 338", "R - 514", "blank"
+    ];
+
+    const contactNumbers = [
+      "0300 2565512", "", "", "", "", "", "", "", "", "", "",
+      "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+      "", "", "", ""
+    ];
+
+    for (const month of months) {
+      const monthOfThisCategory = await monthsModel.findOne({ name: month });
+      const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            Year:"2025",
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            Year:"2025",
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        // Calculate the amount to be collected using floor logic
+
+
+
+
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+router.get("/addhousesR2026", async function (req, res, next) {
+  try {
+    const months = await monthsModel.find({Year:"2026"});
+    const category = "R";
+
+    const plotNumbers = [
+      "R - 1", "R - 2", "R - 2A", "R - 3", "R - 3A", "R - 4", "R - 4A",
+      "R - 4B", "R - 5", "R - 6", "R - 7", "R - 8", "R - 9", "R - 10",
+      "R - 11", "R - 12", "R - 13", "R - 14", "R - 15", "R - 16",
+      "R - 17", "R - 18", "R - 19", "R - 20", "R - 21", "R - 22",
+      "R - 23", "R - 24", "R - 25"
+    ];
+
+    const namesArray = [
+      "MR M. ADNAN MAIRAJ S/O MAIRAJUDDIN", "MR. NADEEM AHMED S/O S. FAIZ UL HASAN",
+      "MR. S. TARIQ JAMAL HASHMI S/O S. JAMAL AHMED HASHMI", "MR. M. ILYAS S/O M. RAUF",
+      "MRS. ZAIN UL EBAD W/O S. ZAINUL EBAD", "HAFIZ M. RAFIQ S/O KHUSHI MUHAMMAD",
+      "MRS. ABIDA RAHAT W/O M. RAHAT", "", "MRS. MUSHKBAR FATIMA W/O FARAZ AHMED",
+      "MR. ZEESHAN MUMTAZ S/O MUMTAZ AHMED", "MRS. KULSOOM BEGUM W/O M. HANIF",
+      "MRS. ANUM SALMAN W/O AHMAD SALMAN", "MR. M. UMAIR S/O M. SALEEM",
+      "MR. SALIMULLAH S/O AMANULLAH", "MR. M. MAAZ S/O ABDUL RAHIM",
+      "MR. ZAIN UL ABEDIN S/O SYED MUJEEB ULLAH", "MR. M. MIAN S/O AJAN MIAN", "",
+      "MRS. SALMA KHATOON W/O M. ADNAN MAIRAJ", "MR. ASADULLAH KHAN S/O FEROZ KHAN",
+      "", "", "", "MR. ISHAQ USMANI S/O USMAN GHANI", "MRS. SHAGUFTA W/O TANVEER",
+      "MR. S. NOORAN SHAH S/O", "M. ADNAN MAIRAJ S/O MAIRAJUDDIN",
+      "M. FAROOQ JAMIL S/O M. JAMIL QURESHI", ""
+    ];
+
+    const floorsArray = [
+      "G", "G", "G", "G + 2", "G + 1", "G + 1", "G", "Plot", "G", "G + 1",
+      "G", "G + 1", "G + 2", "G", "G", "G + 1", "G + 1", "Plot", "G",
+      "G + 1", "Plot", "Plot", "Plot", "G + 1", "G + 2", "G + 1", "G + 2", "G + 1", ""
+    ];
+
+    const shareTypeMembership = [
+      "R 16", "R - 551", "R - 991", "R - 523", "R - 623", "R - 25",
+      "R - 624", "blank", "R - 552", "R - 23", "R - 311", "R - 530",
+      "R - 548", "R - 301", "R - 507", "R - 553", "R - 544", "blank",
+      "R - 542", "R - 538", "blank", "blank", "blank", "R - 500",
+      "R - 524", "R - 159", "R - 338", "R - 514", "blank"
+    ];
+
+    const contactNumbers = [
+      "0300 2565512", "", "", "", "", "", "", "", "", "", "",
+      "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+      "", "", "", ""
+    ];
+
+    for (const month of months) {
+      const monthOfThisCategory = await monthsModel.findOne({ name: month });
+      const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            Year:"2025",
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            Year:"2025",
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        // Calculate the amount to be collected using floor logic
+
+
+
+
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+
+
+
+// for A category
+router.get("/addhousesA2025", async function (req, res, next) {
+  try {
+    const months = await monthsModel.find({Year:"2025"});
+    const category = "A";
+    let plotNumbers = [];
+let namesArray = [];
+let floorsArray = [];
+let shareTypeMembership = [];
+let contactNumbers = Array(136).fill("");
+
+const data = [
+  { id: "1A-1", name: "MRS. UZMA MUZAFFAR S/O MUZAFFAR KHAN", status: "G", reference: "R - 517" },
+  { id: "1A-2", name: "MR. M. HARRIS S/O SAJEEL AHMED", status: "G", reference: "R - 512" },
+  { id: "1A-3", name: "", status: "Plot",reference: "" },
+  { id: "1A-4", name: "", status: "Plot",reference: "" },
+  { id: "1A-5", name: "", status: "Plot",reference: "" },
+  { id: "1A-6", name: "", status: "Plot",reference: "" },
+  { id: "1A-7", name: "MRS. SALMA JAMIL S/O JAMIL AHMED", status: "G + 1", reference: "R - 351" },
+  { id: "1A-8", name: "MR. M. SHOAIB KHAN S/O ZAFAR UL HASAN KHAN", status: "G", reference: "R - 341" },
+  { id: "1A-9", name: "MR. M. AMIR ANSARI S/O M. IBRAHIM ANSARI", status: "U C", reference: "R - 405" },
+  { id: "1A-9 A", name: "MR. M. SULTAN S/O M. IDREES", status: "G + 1", reference: "R - 1062" },
+  { id: "1A-9 B", name: "", status: "Plot",reference: "" },
+  { id: "1A-9 C", name: "MR. SHAMIM UL HAQ S/O EHTESHAM UL HAQ", status: "G+1UC", reference: "R - 1058" },
+  { id: "1A-9 D", name: "", status: "Plot",reference: "" },
+  { id: "1A-9 E", name: "E MRS. AISHA TAHIR W/O TAHIR IMRAN", status: "G+1UC", reference: "R - 990" },
+  { id: "1A-10", name: "MR. BASHARAT KHAN S/O BASHIR AHMED", status: "G + 1", reference: "R - 516" },
+  { id: "1A-11", name: "", status: "Plot",reference: "" },
+  { id: "1A-12", name: "", status: "Plot",reference: "" },
+  { id: "1A-13", name: "", status: "Plot",reference: "" },
+  { id: "1A-14", name: "MRS. REHMANI BEGUM W/O SHAKEEL AHMED", status: "G", reference: "R - 291" },
+  { id: "1A-15", name: "", status: "Plot",reference: "" },
+  { id: "1A-16", name: "", status: "Plot",reference: "" },
+  { id: "1A-17", name: "", status: "Plot",reference: "" },
+  { id: "1A-18", name: "MR. M. ZUBAIR S/O KHALIL UR REHMAN", status: "G", reference: "R - 403" },
+  { id: "1A-19", name: "", status: "Plot",reference: "" },
+  { id: "1A-20", name: "", status: "Plot",reference: "" },
+  { id: "1A-21", name: "", status: "Plot",reference: "" },
+  { id: "1A-22", name: "", status: "Plot",reference: "" },
+  { id: "1A-23", name: "", status: "Plot",reference: "" },
+  { id: "1A-24", name: "", status: "Plot",reference: "" },
+  { id: "1A-25", name: "", status: "Plot",reference: "" },
+  { id: "1A-26", name: "", status: "Plot",reference: "" },
+  { id: "1A-27", name: "", status: "Plot",reference: "" },
+  { id: "1A-28", name: "", status: "Plot",reference: "" },
+  { id: "1A-29", name: "MR. ABDUL KHALID S/O ABDUL WAJID", status: "G+1UC", reference: "R - 123" },
+  { id: "1A-30", name: "", status: "Plot",reference: "" },
+  { id: "1A-31", name: "", status: "Plot",reference: "" },
+  { id: "1A-32", name: "", status: "Plot",reference: "" },
+  { id: "1A-33", name: "", status: "Plot",reference: "" },
+  { id: "1A-34", name: "", status: "Plot",reference: "" },
+  { id: "1A-35", name: "", status: "Plot",reference: "" },
+  { id: "1A-36", name: "MR. SAFAR MUHAMMAD S/O NOOR MUHAMMAD", status: "G + 1",reference: "" },
+  { id: "1A-37", name: "MR. SALAHUDDIN S/O M. MUNIR UDDIN", status: "G + 1", reference: "R - 536" },
+  { id: "1A-38", name: "MRS. JEHNAZ SULTANA W/O", status: "G + 1", reference: "R - 535" },
+  { id: "1A-39", name: "MR. TALHA ISLAM S/O ISLAM UL HAQ", status: "G + 1", reference: "R - 549" },
+  { id: "1A-40", name: "", status: "Plot",reference: "" },
+  { id: "1A-41", name: "MRS. SHAMEEN ASIM W/O ASIM FAROOQI", status: "G", reference: "R - 180" },
+  { id: "1A-42", name: "MR. ABDULLAH NISAR S/O NISAR AHMED", status: "G", reference: "R - 260" },
+  { id: "1A-43", name: "MR. ZIA UDDIN SIDDIQI S/O MAJEED UDDIN SIDDIQI", status: "G + 1", reference: "R - 73" },
+  { id: "1A-44", name: "", status: "Plot",reference: "" },
+  { id: "1A-45", name: "MR. ABDUL RAB S/O MUHAMMAD", status: "G + 1", reference: "R - 75" },
+  { id: "1A-46", name: "", status: "Plot",reference: "" },
+  { id: "1A-47", name: "", status: "Plot",reference: "" },
+  { id: "1A-48", name: "MR. NASEER AHMED S/O GUL MOHAMMAD", status: "G + 1", reference: "R - 352" },
+  { id: "1A-49", name: "", status: "Plot",reference: "" },
+  { id: "1A-50", name: "", status: "Plot",reference: "" },
+  { id: "1A-51", name: "", status: "Plot",reference: "" },
+  { id: "1A-52", name: "MRS. NAVEEN AFSAR W/O AFSAR ALAM SIDDIQI", status: "G", reference: "R - 11" },
+  { id: "1A-53", name: "", status: "Plot",reference: "" },
+  { id: "1A-54", name: "MR. ABDUL MAJID S/O AZIZ KHAN", status: "G + 1", reference: "R - 430" },
+  { id: "1A-55", name: "", status: "Plot",reference: "" },
+  { id: "1A-56", name: "", status: "Plot",reference: "" },
+  { id: "1A-57", name: "MR. KHALID SAIFULLAH S/O AHMAD ALI BAIG", status: "G + 1", reference: "R - 60" },
+  { id: "1A-58", name: "", status: "Plot",reference: "" },
+  { id: "1A-59", name: "", status: "Plot",reference: "" },
+  { id: "1A-60", name: "", status: "Plot",reference: "" },
+  { id: "1A-61", name: "", status: "Plot",reference: "" },
+  { id: "1A-62", name: "MR. HABIB ANJUM S/O ANJUM RAFIQ", status: "G + 1", reference: "R - 468" },
+  { id: "1A-63", name: "", status: "Plot",reference: "" },
+  { id: "1A-64", name: "MRS. SEEMA KHATOON W/O M. MANSOOR", status: "G + 1", reference: "R - 364" },
+  { id: "1A-65", name: "MR. M. ADEEL S/O IFTIKHAR UDDIN", status: "G + 1", reference: "R - 58" },
+  { id: "1A-66", name: "", status: "Plot",reference: "" },
+  { id: "1A-67", name: "", status: "Plot",reference: "" },
+  { id: "1A-68", name: "", status: "Plot",reference: "" },
+  { id: "1A-69", name: "MRS. SHAHZADI PUKHRAJ W/O", status: "G + 1", reference: "R - 529" },
+  { id: "1A-70", name: "", status: "Plot",reference: "" },
+  { id: "1A-71", name: "MRS. AMBER DANISH W/O DANISH RAZA", status: "G + 1", reference: "R - 310" },
+  { id: "1A-72", name: "MR. M. ZAKIR S/O M. FAROOQ", status: "G + 1", reference: "R - 168" },
+  { id: "1A-73", name: "MRS.GHAZALA NADEEM W/O M. NADEEM HASHMI", status: "U C", reference: "R - 153" },
+  { id: "1A-74", name: "MRS. KULSOOM W/O M. SADDIQ KARAR", status: "G + 1", reference: "R - 77" },
+  { id: "1A-75", name: "", status: "Plot",reference: "" },
+  { id: "1A-76", name: "", status: "Plot",reference: "" },
+  { id: "1A-77", name: "", status: "Plot",reference: "" },
+  { id: "1A-78", name: "", status: "Plot",reference: "" },
+  { id: "1A-79", name: "MRS. NUSRAT ARA W/O M. SHAFIQ", status: "G + 1", reference: "R - 431" },
+  { id: "1A-80", name: "", status: "Plot",reference: "" },
+  { id: "1A-81", name: "", status: "Plot",reference: "" },
+  { id: "1A-82", name: "", status: "Plot",reference: "" },
+  { id: "1A-83", name: "", status: "Plot",reference: "" },
+  { id: "1A-84", name: "MR. ASHFAQ AHMED S/O JUMMA KHAN", status: "G", reference: "R - 57" },
+  { id: "1A-85", name: "", status: "Plot",reference: "" },
+  { id: "1A-86", name: "MR. FAZLE MAULA S/O FAZAL MOHAMMAD", status: "G + 1", reference: "R - 466" },
+  { id: "1A-87", name: "MR. ZULFIQAR ALI S/O MEHRAB BHUTTO", status: "G + 1", reference: "R - 28" },
+  { id: "1A-88", name: "MRS. FOUZIA W/O M. ZUBAIR MAIRAJ", status: "G + 1", reference: "R - 527" },
+  { id: "1A-89", name: "MR. M. ANEES S/O M. RAFIQ", status: "G + 1", reference: "U C R - 332" },
+  { id: "1A-90", name: "MR. ZAKA UDDIN S/O JAWAID TARIQ", status: "G + 1", reference: "R - 334" },
+  { id: "1A-91", name: "", status: "Plot",reference: "" },
+  { id: "1A-92", name: "MR. M. ASIM S/O HAMEED ULLAH", status: "G + 1", reference: "R - 397" },
+  { id: "1A-93", name: "MRS. TAHIRA KHATOON W/O ALI AKHTER", status: "G", reference: "R -537" },
+  { id: "1A-94", name: "MRS. HUMERA SHIRAZI W/O SAEED UR REHMAN", status: "G", reference: "R - 520" },
+  { id: "1A-95", name: "", status: "Plot",reference: "" },
+  { id: "1A-96", name: "", status: "Plot",reference: "" },
+  { id: "1A-97", name: "", status: "Plot",reference: "" },
+  { id: "1A-98", name: "MR. S. MASOOD HASAN ZAIDI S/O LAIQ AHMED ZAIDI", status: "G", reference: "R - 503" },
+  { id: "1A-99", name: "", status: "Plot",reference: "" },
+  { id: "1A-100", name: "MRS. SABIRA BEGUM W/O M. ASHRAF", status: "G", reference: "R - 297" },
+  { id: "1A-101", name: "MRS. SAIMA ADNAN W/O ADNAN USMANI", status: "G + 1", reference: "R - 45" },
+  { id: "1A-102", name: "", status: "Plot",reference: "" },
+  { id: "1A-103", name: "MR. M. AMIR S/O M. ARIF", status: "G + 1", reference: "R - 363" },
+  { id: "1A-104", name: "", status: "Plot",reference: "" },
+  { id: "1A-105", name: "MR. SULEMAN S/O ABDUL KARIM", status: "G + 1", reference: "R - 318" },
+  { id: "1A-106", name: "", status: "Plot",reference: "" },
+  { id: "1A-107", name: "", status: "Plot",reference: "" },
+  { id: "1A-108", name: "", status: "Plot",reference: "" },
+  { id: "1A-109", name: "MR. YAR MOHAMMAD KHAN S/O PIRA KHAN", status: "G + 1", reference: "R - 40" },
+  { id: "1A-110", name: "MR. M. IMRAN S/O ABDUL SALAM", status: "G + 2", reference: "R - 274" },
+  { id: "1A-111", name: "", status: "Plot",reference: "" },
+  { id: "1A-112", name: "MR. M. ALTAF QADIR S/O", status: "G + 1", reference: "R - 501" },
+  { id: "1A-113", name: "MRS. FARIHA MAHMOOD W/O MAHMOOD UL HAQ SIDDIQI", status: "G + 1", reference: "R - 150" },
+  { id: "1A-114", name: "", status: "Plot",reference: "" },
+  { id: "1A-115", name: "MR. MAHMOOD S/O ABDUL MAJEED", status: "G + 1", reference: "R - 238" },
+  { id: "1A-116", name: "", status: "Plot",reference: "" },
+  { id: "1A-117", name: " MRS. SHOUMAILA BIBI D/O MOHAMMAD SHER KHAN", status: "G + 1", reference: "R - 235" },
+  { id: "1A-118", name: "", status: "Plot",reference: "" },
+  { id: "1A-119", name: "", status: "Plot",reference: "" },
+  { id: "1A-120", name: "MR. M. TARIQ BAWANI S/O M. HANIF BAWANI", status: "G + 1", reference: "R - 234" },
+  { id: "1A-121", name: "", status: "Plot",reference: "" },
+  { id: "1A-122", name: "MR. ABDUL FAREED SIDDIQI S/O ABDUL AZIZ", status: "G + 1", reference: "R - 239" },
+  { id: "1A-123", name: "", status: "Plot",reference: "" },
+  { id: "1A-124", name: "MR. M. SALEEM S/O HAROON AHMED", status: "G + 2", reference: "R - 225" },
+  { id: "1A-125", name: "MR. REHAN UMER S/O M. IDREES", status: "G + 1", reference: "R - 71" },
+  { id: "1A-126", name: "", status: "Plot",reference: "" },
+  { id: "1A-127", name: "MR. M. ASLAM S/O M. A. RAZZAK", status: "G + 2", reference: "R - 398" },
+  { id: "1A-128", name: " MR. WAQAR AHMED QURESHI S/O M. ANSAR", status: "G + 2", reference: "R - 416" },
+  { id: "1A-129", name: " MR. RAHEEL AHMED QURESHI S/O M. ANSAR", status: "G + 1", reference: "R - 386" },
+  { id: "1A-130", name: "", status: "Plot",reference: "" },
+  { id: "1A-131", name: "", status: "Plot",reference: "" },
+  { id: "1A-132", name: "", status: "Plot",reference: "" },
+  { id: "1A-133", name: "", status: "Plot",reference: "" },
+  { id: "1A-134", name: "", status: "Plot",reference: "" },
+  { id: "1A-135", name: "", status: "Plot",reference: "" },
+  { id: "1A-136", name: "", status: "Plot",reference: "" },
+  
+  
+  ]
+
+data.forEach((e)=>{
+  plotNumbers.push(e.id);
+  namesArray.push(e.name);
+  floorsArray.push(e.status);
+  shareTypeMembership.push(e.reference);
+})
+
+    for (const month of months) {
+        const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+        const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2025" });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+router.get("/addhousesA2026", async function (req, res, next) {
+  try {
+    const months = await monthsModel.find({Year:"2026"});
+    const category = "A";
+    let plotNumbers = [];
+let namesArray = [];
+let floorsArray = [];
+let shareTypeMembership = [];
+let contactNumbers = Array(136).fill("");
+
+const data = [
+  { id: "1A-1", name: "MRS. UZMA MUZAFFAR S/O MUZAFFAR KHAN", status: "G", reference: "R - 517" },
+  { id: "1A-2", name: "MR. M. HARRIS S/O SAJEEL AHMED", status: "G", reference: "R - 512" },
+  { id: "1A-3", name: "", status: "Plot",reference: "" },
+  { id: "1A-4", name: "", status: "Plot",reference: "" },
+  { id: "1A-5", name: "", status: "Plot",reference: "" },
+  { id: "1A-6", name: "", status: "Plot",reference: "" },
+  { id: "1A-7", name: "MRS. SALMA JAMIL S/O JAMIL AHMED", status: "G + 1", reference: "R - 351" },
+  { id: "1A-8", name: "MR. M. SHOAIB KHAN S/O ZAFAR UL HASAN KHAN", status: "G", reference: "R - 341" },
+  { id: "1A-9", name: "MR. M. AMIR ANSARI S/O M. IBRAHIM ANSARI", status: "U C", reference: "R - 405" },
+  { id: "1A-9 A", name: "MR. M. SULTAN S/O M. IDREES", status: "G + 1", reference: "R - 1062" },
+  { id: "1A-9 B", name: "", status: "Plot",reference: "" },
+  { id: "1A-9 C", name: "MR. SHAMIM UL HAQ S/O EHTESHAM UL HAQ", status: "G+1UC", reference: "R - 1058" },
+  { id: "1A-9 D", name: "", status: "Plot",reference: "" },
+  { id: "1A-9 E", name: "E MRS. AISHA TAHIR W/O TAHIR IMRAN", status: "G+1UC", reference: "R - 990" },
+  { id: "1A-10", name: "MR. BASHARAT KHAN S/O BASHIR AHMED", status: "G + 1", reference: "R - 516" },
+  { id: "1A-11", name: "", status: "Plot",reference: "" },
+  { id: "1A-12", name: "", status: "Plot",reference: "" },
+  { id: "1A-13", name: "", status: "Plot",reference: "" },
+  { id: "1A-14", name: "MRS. REHMANI BEGUM W/O SHAKEEL AHMED", status: "G", reference: "R - 291" },
+  { id: "1A-15", name: "", status: "Plot",reference: "" },
+  { id: "1A-16", name: "", status: "Plot",reference: "" },
+  { id: "1A-17", name: "", status: "Plot",reference: "" },
+  { id: "1A-18", name: "MR. M. ZUBAIR S/O KHALIL UR REHMAN", status: "G", reference: "R - 403" },
+  { id: "1A-19", name: "", status: "Plot",reference: "" },
+  { id: "1A-20", name: "", status: "Plot",reference: "" },
+  { id: "1A-21", name: "", status: "Plot",reference: "" },
+  { id: "1A-22", name: "", status: "Plot",reference: "" },
+  { id: "1A-23", name: "", status: "Plot",reference: "" },
+  { id: "1A-24", name: "", status: "Plot",reference: "" },
+  { id: "1A-25", name: "", status: "Plot",reference: "" },
+  { id: "1A-26", name: "", status: "Plot",reference: "" },
+  { id: "1A-27", name: "", status: "Plot",reference: "" },
+  { id: "1A-28", name: "", status: "Plot",reference: "" },
+  { id: "1A-29", name: "MR. ABDUL KHALID S/O ABDUL WAJID", status: "G+1UC", reference: "R - 123" },
+  { id: "1A-30", name: "", status: "Plot",reference: "" },
+  { id: "1A-31", name: "", status: "Plot",reference: "" },
+  { id: "1A-32", name: "", status: "Plot",reference: "" },
+  { id: "1A-33", name: "", status: "Plot",reference: "" },
+  { id: "1A-34", name: "", status: "Plot",reference: "" },
+  { id: "1A-35", name: "", status: "Plot",reference: "" },
+  { id: "1A-36", name: "MR. SAFAR MUHAMMAD S/O NOOR MUHAMMAD", status: "G + 1",reference: "" },
+  { id: "1A-37", name: "MR. SALAHUDDIN S/O M. MUNIR UDDIN", status: "G + 1", reference: "R - 536" },
+  { id: "1A-38", name: "MRS. JEHNAZ SULTANA W/O", status: "G + 1", reference: "R - 535" },
+  { id: "1A-39", name: "MR. TALHA ISLAM S/O ISLAM UL HAQ", status: "G + 1", reference: "R - 549" },
+  { id: "1A-40", name: "", status: "Plot",reference: "" },
+  { id: "1A-41", name: "MRS. SHAMEEN ASIM W/O ASIM FAROOQI", status: "G", reference: "R - 180" },
+  { id: "1A-42", name: "MR. ABDULLAH NISAR S/O NISAR AHMED", status: "G", reference: "R - 260" },
+  { id: "1A-43", name: "MR. ZIA UDDIN SIDDIQI S/O MAJEED UDDIN SIDDIQI", status: "G + 1", reference: "R - 73" },
+  { id: "1A-44", name: "", status: "Plot",reference: "" },
+  { id: "1A-45", name: "MR. ABDUL RAB S/O MUHAMMAD", status: "G + 1", reference: "R - 75" },
+  { id: "1A-46", name: "", status: "Plot",reference: "" },
+  { id: "1A-47", name: "", status: "Plot",reference: "" },
+  { id: "1A-48", name: "MR. NASEER AHMED S/O GUL MOHAMMAD", status: "G + 1", reference: "R - 352" },
+  { id: "1A-49", name: "", status: "Plot",reference: "" },
+  { id: "1A-50", name: "", status: "Plot",reference: "" },
+  { id: "1A-51", name: "", status: "Plot",reference: "" },
+  { id: "1A-52", name: "MRS. NAVEEN AFSAR W/O AFSAR ALAM SIDDIQI", status: "G", reference: "R - 11" },
+  { id: "1A-53", name: "", status: "Plot",reference: "" },
+  { id: "1A-54", name: "MR. ABDUL MAJID S/O AZIZ KHAN", status: "G + 1", reference: "R - 430" },
+  { id: "1A-55", name: "", status: "Plot",reference: "" },
+  { id: "1A-56", name: "", status: "Plot",reference: "" },
+  { id: "1A-57", name: "MR. KHALID SAIFULLAH S/O AHMAD ALI BAIG", status: "G + 1", reference: "R - 60" },
+  { id: "1A-58", name: "", status: "Plot",reference: "" },
+  { id: "1A-59", name: "", status: "Plot",reference: "" },
+  { id: "1A-60", name: "", status: "Plot",reference: "" },
+  { id: "1A-61", name: "", status: "Plot",reference: "" },
+  { id: "1A-62", name: "MR. HABIB ANJUM S/O ANJUM RAFIQ", status: "G + 1", reference: "R - 468" },
+  { id: "1A-63", name: "", status: "Plot",reference: "" },
+  { id: "1A-64", name: "MRS. SEEMA KHATOON W/O M. MANSOOR", status: "G + 1", reference: "R - 364" },
+  { id: "1A-65", name: "MR. M. ADEEL S/O IFTIKHAR UDDIN", status: "G + 1", reference: "R - 58" },
+  { id: "1A-66", name: "", status: "Plot",reference: "" },
+  { id: "1A-67", name: "", status: "Plot",reference: "" },
+  { id: "1A-68", name: "", status: "Plot",reference: "" },
+  { id: "1A-69", name: "MRS. SHAHZADI PUKHRAJ W/O", status: "G + 1", reference: "R - 529" },
+  { id: "1A-70", name: "", status: "Plot",reference: "" },
+  { id: "1A-71", name: "MRS. AMBER DANISH W/O DANISH RAZA", status: "G + 1", reference: "R - 310" },
+  { id: "1A-72", name: "MR. M. ZAKIR S/O M. FAROOQ", status: "G + 1", reference: "R - 168" },
+  { id: "1A-73", name: "MRS.GHAZALA NADEEM W/O M. NADEEM HASHMI", status: "U C", reference: "R - 153" },
+  { id: "1A-74", name: "MRS. KULSOOM W/O M. SADDIQ KARAR", status: "G + 1", reference: "R - 77" },
+  { id: "1A-75", name: "", status: "Plot",reference: "" },
+  { id: "1A-76", name: "", status: "Plot",reference: "" },
+  { id: "1A-77", name: "", status: "Plot",reference: "" },
+  { id: "1A-78", name: "", status: "Plot",reference: "" },
+  { id: "1A-79", name: "MRS. NUSRAT ARA W/O M. SHAFIQ", status: "G + 1", reference: "R - 431" },
+  { id: "1A-80", name: "", status: "Plot",reference: "" },
+  { id: "1A-81", name: "", status: "Plot",reference: "" },
+  { id: "1A-82", name: "", status: "Plot",reference: "" },
+  { id: "1A-83", name: "", status: "Plot",reference: "" },
+  { id: "1A-84", name: "MR. ASHFAQ AHMED S/O JUMMA KHAN", status: "G", reference: "R - 57" },
+  { id: "1A-85", name: "", status: "Plot",reference: "" },
+  { id: "1A-86", name: "MR. FAZLE MAULA S/O FAZAL MOHAMMAD", status: "G + 1", reference: "R - 466" },
+  { id: "1A-87", name: "MR. ZULFIQAR ALI S/O MEHRAB BHUTTO", status: "G + 1", reference: "R - 28" },
+  { id: "1A-88", name: "MRS. FOUZIA W/O M. ZUBAIR MAIRAJ", status: "G + 1", reference: "R - 527" },
+  { id: "1A-89", name: "MR. M. ANEES S/O M. RAFIQ", status: "G + 1", reference: "U C R - 332" },
+  { id: "1A-90", name: "MR. ZAKA UDDIN S/O JAWAID TARIQ", status: "G + 1", reference: "R - 334" },
+  { id: "1A-91", name: "", status: "Plot",reference: "" },
+  { id: "1A-92", name: "MR. M. ASIM S/O HAMEED ULLAH", status: "G + 1", reference: "R - 397" },
+  { id: "1A-93", name: "MRS. TAHIRA KHATOON W/O ALI AKHTER", status: "G", reference: "R -537" },
+  { id: "1A-94", name: "MRS. HUMERA SHIRAZI W/O SAEED UR REHMAN", status: "G", reference: "R - 520" },
+  { id: "1A-95", name: "", status: "Plot",reference: "" },
+  { id: "1A-96", name: "", status: "Plot",reference: "" },
+  { id: "1A-97", name: "", status: "Plot",reference: "" },
+  { id: "1A-98", name: "MR. S. MASOOD HASAN ZAIDI S/O LAIQ AHMED ZAIDI", status: "G", reference: "R - 503" },
+  { id: "1A-99", name: "", status: "Plot",reference: "" },
+  { id: "1A-100", name: "MRS. SABIRA BEGUM W/O M. ASHRAF", status: "G", reference: "R - 297" },
+  { id: "1A-101", name: "MRS. SAIMA ADNAN W/O ADNAN USMANI", status: "G + 1", reference: "R - 45" },
+  { id: "1A-102", name: "", status: "Plot",reference: "" },
+  { id: "1A-103", name: "MR. M. AMIR S/O M. ARIF", status: "G + 1", reference: "R - 363" },
+  { id: "1A-104", name: "", status: "Plot",reference: "" },
+  { id: "1A-105", name: "MR. SULEMAN S/O ABDUL KARIM", status: "G + 1", reference: "R - 318" },
+  { id: "1A-106", name: "", status: "Plot",reference: "" },
+  { id: "1A-107", name: "", status: "Plot",reference: "" },
+  { id: "1A-108", name: "", status: "Plot",reference: "" },
+  { id: "1A-109", name: "MR. YAR MOHAMMAD KHAN S/O PIRA KHAN", status: "G + 1", reference: "R - 40" },
+  { id: "1A-110", name: "MR. M. IMRAN S/O ABDUL SALAM", status: "G + 2", reference: "R - 274" },
+  { id: "1A-111", name: "", status: "Plot",reference: "" },
+  { id: "1A-112", name: "MR. M. ALTAF QADIR S/O", status: "G + 1", reference: "R - 501" },
+  { id: "1A-113", name: "MRS. FARIHA MAHMOOD W/O MAHMOOD UL HAQ SIDDIQI", status: "G + 1", reference: "R - 150" },
+  { id: "1A-114", name: "", status: "Plot",reference: "" },
+  { id: "1A-115", name: "MR. MAHMOOD S/O ABDUL MAJEED", status: "G + 1", reference: "R - 238" },
+  { id: "1A-116", name: "", status: "Plot",reference: "" },
+  { id: "1A-117", name: " MRS. SHOUMAILA BIBI D/O MOHAMMAD SHER KHAN", status: "G + 1", reference: "R - 235" },
+  { id: "1A-118", name: "", status: "Plot",reference: "" },
+  { id: "1A-119", name: "", status: "Plot",reference: "" },
+  { id: "1A-120", name: "MR. M. TARIQ BAWANI S/O M. HANIF BAWANI", status: "G + 1", reference: "R - 234" },
+  { id: "1A-121", name: "", status: "Plot",reference: "" },
+  { id: "1A-122", name: "MR. ABDUL FAREED SIDDIQI S/O ABDUL AZIZ", status: "G + 1", reference: "R - 239" },
+  { id: "1A-123", name: "", status: "Plot",reference: "" },
+  { id: "1A-124", name: "MR. M. SALEEM S/O HAROON AHMED", status: "G + 2", reference: "R - 225" },
+  { id: "1A-125", name: "MR. REHAN UMER S/O M. IDREES", status: "G + 1", reference: "R - 71" },
+  { id: "1A-126", name: "", status: "Plot",reference: "" },
+  { id: "1A-127", name: "MR. M. ASLAM S/O M. A. RAZZAK", status: "G + 2", reference: "R - 398" },
+  { id: "1A-128", name: " MR. WAQAR AHMED QURESHI S/O M. ANSAR", status: "G + 2", reference: "R - 416" },
+  { id: "1A-129", name: " MR. RAHEEL AHMED QURESHI S/O M. ANSAR", status: "G + 1", reference: "R - 386" },
+  { id: "1A-130", name: "", status: "Plot",reference: "" },
+  { id: "1A-131", name: "", status: "Plot",reference: "" },
+  { id: "1A-132", name: "", status: "Plot",reference: "" },
+  { id: "1A-133", name: "", status: "Plot",reference: "" },
+  { id: "1A-134", name: "", status: "Plot",reference: "" },
+  { id: "1A-135", name: "", status: "Plot",reference: "" },
+  { id: "1A-136", name: "", status: "Plot",reference: "" },
+  
+  
+  ]
+
+data.forEach((e)=>{
+  plotNumbers.push(e.id);
+  namesArray.push(e.name);
+  floorsArray.push(e.status);
+  shareTypeMembership.push(e.reference);
+})
+
+    for (const month of months) {
+        const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+        const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2026" });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+For B Category
+
+router.get("/addhousesB2025", async function (req, res, next) {
+  try {
+   const months = await monthsModel.find({Year:"2025"});
+    const category = "B";
+    let plotNumbers = [];
+    let namesArray = [];
+    let floorsArray = [];
+    let shareTypeMembership = [];
+    let contactNumbers = Array(136).fill("");
+
+
+const dataforB = [
+  { id: " B-1", name: "MR. M. FAROOQ S/O M. YOUNUS", status: "G + 1", reference: "R - 305" },
+  { id: " B-2", name: "", status: "Plot", reference: "" },
+  ]
+
+
+dataforB.forEach((e)=>{
+  plotNumbers.push(e.id);
+  namesArray.push(e.name);
+  floorsArray.push(e.status);
+  shareTypeMembership.push(e.reference);
+})
+
+    for (const month of months) {
+      const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+      const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2025" });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.get("/addhousesB2026", async function (req, res, next) {
+  try {
+   const months = await monthsModel.find({Year:"2026"});
+    const category = "B";
+    let plotNumbers = [];
+    let namesArray = [];
+    let floorsArray = [];
+    let shareTypeMembership = [];
+    let contactNumbers = Array(136).fill("");
+
+
+const dataforB = [
+  { id: " B-1", name: "MR. M. FAROOQ S/O M. YOUNUS", status: "G + 1", reference: "R - 305" },
+  { id: " B-2", name: "", status: "Plot", reference: "" },
+  { id: " B-3", name: "", status: "Plot", reference: "" },
+  { id: " B-3 A", name: "", status: "Plot", reference: "" },
+  { id: " B-3 B", name: "", status: "Plot", reference: "" },
+  { id: " B-3 C", name: "", status: "Plot", reference: "" },
+  { id: " B-3 D", name: "MR. BAHADUR SHER KHAN S/O", status: "G + 2", reference: "R - 1043" },
+  { id: " B-4", name: "", status: "Plot", reference: "" },
+  { id: " B-5", name: "MR. M. OMAIR S/O", status: "G + 1", reference: "R - 328" },
+  { id: " B-6", name: "", status: "Plot", reference: "" },
+  { id: " B-7", name: " MRS. YASMEEN IQBAL W/O ", status: "G + 1", reference: "R - 519" },
+  { id: " B-8", name: "", status: "Plot", reference: "" },
+  { id: " B-9", name: "MR. BASIT KHALIL S/O KHALIL AHMED SIDDIQI", status: "G", reference: "R - 458" },
+  { id: " B-10", name: "", status: "Plot", reference: "" },
+  { id: " B-11", name: " MRS. SHABANA YASMEEN W/O M. SIDDIQUE", status: "G", reference: "R - 526" },
+  { id: " B-12", name: "  MR. FARRUKH RAZA S/O MEHMOOD", status: "G", reference: "R - 457" },
+  { id: " B-13", name: "", status: "Plot", reference: "" },
+  { id: " B-14", name: "", status: "Plot", reference: "" },
+  { id: " B-15", name: "", status: "Plot", reference: "" },
+  { id: " B-16", name: "", status: "Plot", reference: "" },
+  { id: " B-17", name: "MR. M. ADIL HUSSAIN S/O MUSHARRAF HUSSAIN", status: "G + 1", reference: " R - 218" },
+  { id: " B-18", name: "", status: "Plot", reference: "" },
+  { id: " B-19", name: "", status: "Plot", reference: "" },
+  { id: " B-20", name: "", status: "Plot", reference: "" },
+  { id: " B-21", name: "", status: "Plot", reference: "" },
+  { id: " B-22", name: "", status: "Plot", reference: "" },
+  { id: " B-23", name: "MR. MUNAWAR ALI ALVI S/O MUZAFFAR ALI ALVI", status: "G", reference: " R - 644" },
+  { id: " B-24", name: "", status: "Plot", reference: "" },
+  { id: " B-25", name: "MR. TALAL AHMED S/O CH. SAEED AHMED", status: "Plot", reference: " R - 496" },
+  { id: " B-26", name: "MR. M. FRAZ S/O SAMI ULLAH", status: "G + 1", reference: " R - 497" },
+  { id: " B-27", name: " MR. S. WASEEM HUSSAIN S/O S. IFTEKHAR HUSSAIN", status: "Plot", reference: " R - 499" },
+  { id: " B-28", name: " MRS. HINA NAZ W/O QASIM ALI", status: "Plot", reference: " R - 321" },
+  { id: " B-29", name: " MR. S. ZAHOOR HASAN S/O ISHRAT HASAN", status: "Plot", reference: " R - 459" },
+  { id: " B-30", name: "MR. DOST ALI S/O MOOSA KHAN", status: "Plot", reference: "R - 462" },
+  { id: " B-31", name: "MR. M. ANAS S/O M. AFAAQ", status: "Plot", reference: "R - 461" },
+  { id: " B-32", name: "MR. BABER S/O AMEER GUL", status: "Plot", reference: "R - 460" },
+  { id: " B-33", name: "MR. JAMIL NASIR S/O CH. NASIR UDDIN", status: "Plot", reference: "R - 70" },
+  { id: " B-34", name: "MR. ABDUL RAZZAQ S/O LAL BAKSH", status: "Plot", reference: "R - 561" },
+  { id: " B-35", name: "MR. AKHTAR SAEED S/O QAZI MEHBOOB ILAHI", status: "Plot", reference: "R - 327" },
+  { id: " B-36", name: "MR. ABDUL LATIF S/O ALI AHMED", status: "Plot", reference: "R - 98" },
+  { id: " B-37", name: "MR. FAROOQ KHAN S/O NASEEM M. KHAN", status: "Plot", reference: "R - 304" },
+  { id: " B-38", name: "MR. M. OWAIS S/O M. AFAAQ", status: "Plot", reference: "R - 473" },
+  { id: " B-39", name: "MR. TAYAB ULLAH S/O TAIMUR KHAN", status: "Plot", reference: "R - 474" },
+  { id: " B-40", name: "MR. M. IBAD UR REHMAN S/O", status: "Plot", reference: "R - 475" },
+  { id: " B-41", name: "MR. AHMER SAMI S/O ABDUL SAMI", status: "G + 1", reference: "R - 121" },
+  { id: " B-42", name: "", status: "Plot", reference: "" },
+  { id: " B-43", name: "MR. S. MUKHTAR HASAN S/O G", status: "Plot", reference: "R - 533" },
+  { id: " B-44", name: "MRS. ALMAS MAHJABEEN W/O S.M. AIJAZ UL HAQ", status: "G + 1", reference: "R - 534" },
+  { id: " B-45", name: "", status: "Plot", reference: "" },
+  { id: " B-46", name: "MR. ABDUL SAMAD S/O KHIRO", status: "G + 1", reference: "R - 455" },
+  { id: " B-47", name: "", status: "Plot", reference: "" },
+  { id: " B-48", name: "MR. FARHAN AHMED S/O MOIN UL ISLAM", status: "G + 1", reference: "R - 102" },
+  { id: " B-49", name: "", status: "Plot", reference: "" },
+  { id: " B-50", name: "MR. DANISH RAZA S/O MEHMOOD", status: "G", reference: "R - 476" },
+  { id: " B-51", name: "MRS. AZIZ UN NISA W/O FARRUKH RAZA", status: "G", reference: "R - 100" },
+  { id: " B-52", name: "MR. S. NAJMUL HASAN NAJMI", status: "G + 1", reference: "R - 280" },
+  { id: " B-53", name: "", status: "Plot", reference: "" },
+  { id: " B-54", name: "MRS. SAHIBA SULTANA W/O M. MEHTAB", status: "G", reference: "R - 99" },
+  { id: " B-55", name: "", status: "Plot", reference: "" },
+  { id: " B-56", name: "", status: "Plot", reference: "" },
+  { id: " B-57", name: "", status: "Plot", reference: "" },
+  { id: " B-58", name: "", status: "Plot", reference: "" }
+  ]
+
+
+dataforB.forEach((e)=>{
+  plotNumbers.push(e.id);
+  namesArray.push(e.name);
+  floorsArray.push(e.status);
+  shareTypeMembership.push(e.reference);
+})
+
+    for (const month of months) {
+      const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+      const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2026" });
+
+      for (let i = 0; i < plotNumbers.length; i++) {
+        // Floor logic
+        let floorLabel = floorsArray[i];
+        let floorsCount = 0;
+        if (floorLabel === "G") floorsCount = 1;
+        else if (floorLabel === "G + 1") floorsCount = 2;
+        else if (floorLabel === "G + 2") floorsCount = 3;
+        else if (floorLabel === "G + 3") floorsCount = 4;
+        else if (floorLabel === "G + 4") floorsCount = 5;
+        else if (floorLabel === "Plot") floorsCount = 0;
+
+        const baseAmount = categoryOfThisMonth.amount_per_house;
+        if (isNaN(baseAmount)) {
+          throw new Error("amount_per_house is not a valid number.");
+        }
+
+        if(floorsCount === 0) {
+          const amountToBeCollectedforZero = 0;
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollectedforZero,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+        else{
+          const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+          await houseModel.create({
+            sNo:Number(i+1),
+            name: plotNumbers[i],
+            OwnerName: namesArray[i],
+            OwnerPhone: contactNumbers[i],
+            amount_to_be_collected: amountToBeCollected,
+            is_amount_collected: false,
+            category,
+            month:month.name,
+            shareTypeMembershipNumber: shareTypeMembership[i],
+            floors: floorLabel,
+            monthId: monthOfThisCategory._id,
+            ParentHouseid: categoryOfThisMonth._id
+          });
+        }
+      }
+    }
+
+    res.send("Houses added successfully with correct amount calculation");
+  } catch (error) {
+    console.error("Error adding houses:", error);
+    res.status(500).send("Server Error");
+  }
+});
+
+
+
+
+
+
+//Step by step guide
+
+
+  // router.get("/createmonthfor2025", async function(req,res){
+  //   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  //   const year = "2025"
+  //   months.forEach(async (month) => {
+  //     await monthsModel.create({
+  //       name:month,
+  //       Year:year,
+  //       ammount_to_be_collected:946000,
+  //       ammount_collected:0
+  //     })
+  //   })
+  //   res.send("Created all months for the year 2025")    
+  // })
+
+  //   router.get("/createmonthfor2026", async function(req,res){
+  //   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  //   const year = "2026"
+  //   months.forEach(async (month) => {
+  //     await monthsModel.create({
+  //       name:month,
+  //       Year:year,
+  //       ammount_to_be_collected:946000
+  //     })
+  //   })    
+  //   res.send("Created all months for the year 2026")    
+  //   })
+
+
+
+  // // Now second step for creating categories by loop
+
+  // router.get("/createcat2025", async function(req, res) {
+  //   const months = await monthsModel.find({Year:"2025"})
+  //   const categories = ["A", "B", "R", "C"];
+  //   const amounts = [310000, 95000, 92000, 0];
+  //   const amount_per_house = {"A": 4000, "B": 5000, "R": 3000, "C": 0};
+  //   for (const month of months) {
+  //     const monthofthiscategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+  //     for (let i = 0; i < categories.length; i++) {
+  //       const category = categories[i];
+  //       const amount = amounts[i];
+  //       const newCategory = await houseCategoryModel.create({
+  //         name: category,
+  //         Year:"2025",
+  //         ammount_to_be_collected: amount,
+  //         month: month.name,
+  //         monthId: monthofthiscategory._id,
+  //         amount_per_house : amount_per_house[category]
+  //       });
+  //       await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+  //     }
+  //   }
+
+  //   res.send("Categories created successfully");
+  // });
+
+  // router.get("/createcat2026", async function(req, res) {
+  //   const months = await monthsModel.find({Year:"2026"})
+  //   const categories = ["A", "B", "R", "C"];
+  //   const amounts = [310000, 95000, 92000, 0];
+  //   const amount_per_house = {"A": 4000, "B": 5000, "R": 3000, "C": 0};
+  //   for (const month of months) {
+  //     const monthofthiscategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+  //     for (let i = 0; i < categories.length; i++) {
+  //       const category = categories[i];
+  //       const amount = amounts[i];
+  //       const newCategory = await houseCategoryModel.create({
+  //         name: category,
+  //         Year:"2026",
+  //         ammount_to_be_collected: amount,
+  //         month: month.name,
+  //         monthId: monthofthiscategory._id,
+  //         amount_per_house : amount_per_house[category]
+  //       });
+  //       await monthsModel.findOneAndUpdate({ name: month }, { $push: { categories_of_this_month: newCategory._id } });
+  //     }
+  //   }
+
+  //   res.send("Categories created successfully");
+  // });
+
+
+  // // Now for Each House
+
+  // router.get("/addhousesR2025", async function (req, res, next) {
+  //   try {
+  //        const months = await monthsModel.find({Year:"2025"});
+
+  //     const category = "R";
+
+
+  // const plotNumbers = [
+  //   "R-1",
+  //   "R-2",
+  //   "R-2A",
+  //   "R-3",
+  //   "R-3A",
+  //   "R-4",
+  //   "R-4A",
+  //   "R-4B",
+  //   "R-5",
+  //   "R-6",
+  //   "R-7",
+  //   "R-8",
+  //   "R-9",
+  //   "R-10",
+  //   "R-11",
+  //   "R-12",
+  //   "R-13",
+  //   "R-14",
+  //   "R-15",
+  //   "R-16",
+  //   "R-17",
+  //   "R-18",
+  //   "R-19",
+  //   "R-20",
+  //   "R-21",
+  //   "R-22",
+  //   "R-23",
+  //   "R-24",
+  //   "R-25"
+  // ];
+  
+
+  //     const namesArray = [
+  //       "MR M. ADNAN MAIRAJ S/O MAIRAJUDDIN", "MR. NADEEM AHMED S/O S. FAIZ UL HASAN",
+  //       "MR. S. TARIQ JAMAL HASHMI S/O S. JAMAL AHMED HASHMI", "MR. M. ILYAS S/O M. RAUF",
+  //       "MRS. ZAIN UL EBAD W/O S. ZAINUL EBAD", "HAFIZ M. RAFIQ S/O KHUSHI MUHAMMAD",
+  //       "MRS. ABIDA RAHAT W/O M. RAHAT", "", "MRS. MUSHKBAR FATIMA W/O FARAZ AHMED",
+  //       "MR. ZEESHAN MUMTAZ S/O MUMTAZ AHMED", "MRS. KULSOOM BEGUM W/O M. HANIF",
+  //       "MRS. ANUM SALMAN W/O AHMAD SALMAN", "MR. M. UMAIR S/O M. SALEEM",
+  //       "MR. SALIMULLAH S/O AMANULLAH", "MR. M. MAAZ S/O ABDUL RAHIM",
+  //       "MR. ZAIN UL ABEDIN S/O SYED MUJEEB ULLAH", "MR. M. MIAN S/O AJAN MIAN", "",
+  //       "MRS. SALMA KHATOON W/O M. ADNAN MAIRAJ", "MR. ASADULLAH KHAN S/O FEROZ KHAN",
+  //       "", "", "", "MR. ISHAQ USMANI S/O USMAN GHANI", "MRS. SHAGUFTA W/O TANVEER",
+  //       "MR. S. NOORAN SHAH S/O", "M. ADNAN MAIRAJ S/O MAIRAJUDDIN",
+  //       "M. FAROOQ JAMIL S/O M. JAMIL QURESHI", ""
+  //     ];
+
+  //     const floorsArray = [
+  //       "G", "G", "G", "G + 2", "G + 1", "G + 1", "G", "Plot", "G", "G + 1",
+  //       "G", "G + 1", "G + 2", "G", "G", "G + 1", "G + 1", "Plot", "G",
+  //       "G + 1", "Plot", "Plot", "Plot", "G + 1", "G + 2", "G + 1", "G + 2", "G + 1", ""
+  //     ];
+
+  //     const shareTypeMembership = [
+  //       "R 16", "R - 551", "R - 991", "R - 523", "R - 623", "R - 25",
+  //       "R - 624", "blank", "R - 552", "R - 23", "R - 311", "R - 530",
+  //       "R - 548", "R - 301", "R - 507", "R - 553", "R - 544", "blank",
+  //       "R - 542", "R - 538", "blank", "blank", "blank", "R - 500",
+  //       "R - 524", "R - 159", "R - 338", "R - 514", "blank"
+  //     ];
+
+  //     const contactNumbers = [
+  //       "0300 2565512", "", "", "", "", "", "", "", "", "", "",
+  //       "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+  //       "", "", "", ""
+  //     ];
+
+  //     for (const month of months) {
+  //       const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+  //       const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2025" });
+
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  // //         // Calculate the amount to be collected using floor logic
+
+
+
+
+  //       }
+  //     }
+
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+
+
+
+  // router.get("/addhousesR2026", async function (req, res, next) {
+  //   try {
+  //     const months = await monthsModel.find({Year:"2026"});
+  //     const category = "R";
+
+  // const plotNumbers = [
+  //   "R-1",
+  //   "R-2",
+  //   "R-2A",
+  //   "R-3",
+  //   "R-3A",
+  //   "R-4",
+  //   "R-4A",
+  //   "R-4B",
+  //   "R-5",
+  //   "R-6",
+  //   "R-7",
+  //   "R-8",
+  //   "R-9",
+  //   "R-10",
+  //   "R-11",
+  //   "R-12",
+  //   "R-13",
+  //   "R-14",
+  //   "R-15",
+  //   "R-16",
+  //   "R-17",
+  //   "R-18",
+  //   "R-19",
+  //   "R-20",
+  //   "R-21",
+  //   "R-22",
+  //   "R-23",
+  //   "R-24",
+  //   "R-25"
+  // ];
+  
+
+  //     const namesArray = [
+  //       "MR M. ADNAN MAIRAJ S/O MAIRAJUDDIN", "MR. NADEEM AHMED S/O S. FAIZ UL HASAN",
+  //       "MR. S. TARIQ JAMAL HASHMI S/O S. JAMAL AHMED HASHMI", "MR. M. ILYAS S/O M. RAUF",
+  //       "MRS. ZAIN UL EBAD W/O S. ZAINUL EBAD", "HAFIZ M. RAFIQ S/O KHUSHI MUHAMMAD",
+  //       "MRS. ABIDA RAHAT W/O M. RAHAT", "", "MRS. MUSHKBAR FATIMA W/O FARAZ AHMED",
+  //       "MR. ZEESHAN MUMTAZ S/O MUMTAZ AHMED", "MRS. KULSOOM BEGUM W/O M. HANIF",
+  //       "MRS. ANUM SALMAN W/O AHMAD SALMAN", "MR. M. UMAIR S/O M. SALEEM",
+  //       "MR. SALIMULLAH S/O AMANULLAH", "MR. M. MAAZ S/O ABDUL RAHIM",
+  //       "MR. ZAIN UL ABEDIN S/O SYED MUJEEB ULLAH", "MR. M. MIAN S/O AJAN MIAN", "",
+  //       "MRS. SALMA KHATOON W/O M. ADNAN MAIRAJ", "MR. ASADULLAH KHAN S/O FEROZ KHAN",
+  //       "", "", "", "MR. ISHAQ USMANI S/O USMAN GHANI", "MRS. SHAGUFTA W/O TANVEER",
+  //       "MR. S. NOORAN SHAH S/O", "M. ADNAN MAIRAJ S/O MAIRAJUDDIN",
+  //       "M. FAROOQ JAMIL S/O M. JAMIL QURESHI", ""
+  //     ];
+
+  //     const floorsArray = [
+  //       "G", "G", "G", "G + 2", "G + 1", "G + 1", "G", "Plot", "G", "G + 1",
+  //       "G", "G + 1", "G + 2", "G", "G", "G + 1", "G + 1", "Plot", "G",
+  //       "G + 1", "Plot", "Plot", "Plot", "G + 1", "G + 2", "G + 1", "G + 2", "G + 1", ""
+  //     ];
+
+  //   const shareTypeMembership = [
+  //     "R 16", "R - 551", "R - 991", "R - 523", "R - 623", "R - 25",
+  //     "R - 624", "blank", "R - 552", "R - 23", "R - 311", "R - 530",
+  //     "R - 548", "R - 301", "R - 507", "R - 553", "R - 544", "blank",
+  //     "R - 542", "R - 538", "blank", "blank", "blank", "R - 500",
+  //     "R - 524", "R - 159", "R - 338", "R - 514", "blank"
+  //   ];
+  
+  //     const contactNumbers = [
+  //       "0300 2565512", "", "", "", "", "", "", "", "", "", "",
+  //       "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+  //       "", "", "", ""
+  //     ];
+  
+  //     for (const month of months) {
+  //       const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+  //       const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month:month.name , Year:"2026" });
+  
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+  
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+  
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         // Calculate the amount to be collected using floor logic
+  
+  
+  
+  
+  //       }
+  //     }
+  
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+
+
+
+
+  // router.get("/addhousesA2025", async function (req, res, next) {
+  //   try {
+  //     const months = await monthsModel.find({Year:"2025"});
+  //     const category = "A";
+  //     let plotNumbers = [];
+  // let namesArray = [];
+  // let floorsArray = [];
+  // let shareTypeMembership = [];
+  // let contactNumbers = Array(136).fill("");
+  
+  // const data = [
+  //   { id: "1A-1", name: "MRS. UZMA MUZAFFAR S/O MUZAFFAR KHAN", status: "G", reference: "R - 517" },
+  //   { id: "1A-2", name: "MR. M. HARRIS S/O SAJEEL AHMED", status: "G", reference: "R - 512" },
+  //   { id: "1A-3", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-4", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-5", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-6", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-7", name: "MRS. SALMA JAMIL S/O JAMIL AHMED", status: "G + 1", reference: "R - 351" },
+  //   { id: "1A-8", name: "MR. M. SHOAIB KHAN S/O ZAFAR UL HASAN KHAN", status: "G", reference: "R - 341" },
+  //   { id: "1A-9", name: "MR. M. AMIR ANSARI S/O M. IBRAHIM ANSARI", status: "U C", reference: "R - 405" },
+  //   { id: "1A-9 A", name: "MR. M. SULTAN S/O M. IDREES", status: "G + 1", reference: "R - 1062" },
+  //   { id: "1A-9 B", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-9 C", name: "MR. SHAMIM UL HAQ S/O EHTESHAM UL HAQ", status: "G+1UC", reference: "R - 1058" },
+  //   { id: "1A-9 D", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-9 E", name: "E MRS. AISHA TAHIR W/O TAHIR IMRAN", status: "G+1UC", reference: "R - 990" },
+  //   { id: "1A-10", name: "MR. BASHARAT KHAN S/O BASHIR AHMED", status: "G + 1", reference: "R - 516" },
+  //   { id: "1A-11", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-12", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-13", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-14", name: "MRS. REHMANI BEGUM W/O SHAKEEL AHMED", status: "G", reference: "R - 291" },
+  //   { id: "1A-15", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-16", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-17", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-18", name: "MR. M. ZUBAIR S/O KHALIL UR REHMAN", status: "G", reference: "R - 403" },
+  //   { id: "1A-19", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-20", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-21", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-22", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-23", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-24", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-25", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-26", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-27", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-28", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-29", name: "MR. ABDUL KHALID S/O ABDUL WAJID", status: "G+1UC", reference: "R - 123" },
+  //   { id: "1A-30", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-31", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-32", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-33", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-34", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-35", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-36", name: "MR. SAFAR MUHAMMAD S/O NOOR MUHAMMAD", status: "G + 1",reference: "" },
+  //   { id: "1A-37", name: "MR. SALAHUDDIN S/O M. MUNIR UDDIN", status: "G + 1", reference: "R - 536" },
+  //   { id: "1A-38", name: "MRS. JEHNAZ SULTANA W/O", status: "G + 1", reference: "R - 535" },
+  //   { id: "1A-39", name: "MR. TALHA ISLAM S/O ISLAM UL HAQ", status: "G + 1", reference: "R - 549" },
+  //   { id: "1A-40", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-41", name: "MRS. SHAMEEN ASIM W/O ASIM FAROOQI", status: "G", reference: "R - 180" },
+  //   { id: "1A-42", name: "MR. ABDULLAH NISAR S/O NISAR AHMED", status: "G", reference: "R - 260" },
+  //   { id: "1A-43", name: "MR. ZIA UDDIN SIDDIQI S/O MAJEED UDDIN SIDDIQI", status: "G + 1", reference: "R - 73" },
+  //   { id: "1A-44", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-45", name: "MR. ABDUL RAB S/O MUHAMMAD", status: "G + 1", reference: "R - 75" },
+  //   { id: "1A-46", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-47", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-48", name: "MR. NASEER AHMED S/O GUL MOHAMMAD", status: "G + 1", reference: "R - 352" },
+  //   { id: "1A-49", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-50", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-51", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-52", name: "MRS. NAVEEN AFSAR W/O AFSAR ALAM SIDDIQI", status: "G", reference: "R - 11" },
+  //   { id: "1A-53", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-54", name: "MR. ABDUL MAJID S/O AZIZ KHAN", status: "G + 1", reference: "R - 430" },
+  //   { id: "1A-55", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-56", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-57", name: "MR. KHALID SAIFULLAH S/O AHMAD ALI BAIG", status: "G + 1", reference: "R - 60" },
+  //   { id: "1A-58", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-59", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-60", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-61", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-62", name: "MR. HABIB ANJUM S/O ANJUM RAFIQ", status: "G + 1", reference: "R - 468" },
+  //   { id: "1A-63", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-64", name: "MRS. SEEMA KHATOON W/O M. MANSOOR", status: "G + 1", reference: "R - 364" },
+  //   { id: "1A-65", name: "MR. M. ADEEL S/O IFTIKHAR UDDIN", status: "G + 1", reference: "R - 58" },
+  //   { id: "1A-66", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-67", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-68", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-69", name: "MRS. SHAHZADI PUKHRAJ W/O", status: "G + 1", reference: "R - 529" },
+  //   { id: "1A-70", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-71", name: "MRS. AMBER DANISH W/O DANISH RAZA", status: "G + 1", reference: "R - 310" },
+  //   { id: "1A-72", name: "MR. M. ZAKIR S/O M. FAROOQ", status: "G + 1", reference: "R - 168" },
+  //   { id: "1A-73", name: "MRS.GHAZALA NADEEM W/O M. NADEEM HASHMI", status: "U C", reference: "R - 153" },
+  //   { id: "1A-74", name: "MRS. KULSOOM W/O M. SADDIQ KARAR", status: "G + 1", reference: "R - 77" },
+  //   { id: "1A-75", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-76", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-77", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-78", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-79", name: "MRS. NUSRAT ARA W/O M. SHAFIQ", status: "G + 1", reference: "R - 431" },
+  //   { id: "1A-80", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-81", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-82", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-83", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-84", name: "MR. ASHFAQ AHMED S/O JUMMA KHAN", status: "G", reference: "R - 57" },
+  //   { id: "1A-85", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-86", name: "MR. FAZLE MAULA S/O FAZAL MOHAMMAD", status: "G + 1", reference: "R - 466" },
+  //   { id: "1A-87", name: "MR. ZULFIQAR ALI S/O MEHRAB BHUTTO", status: "G + 1", reference: "R - 28" },
+  //   { id: "1A-88", name: "MRS. FOUZIA W/O M. ZUBAIR MAIRAJ", status: "G + 1", reference: "R - 527" },
+  //   { id: "1A-89", name: "MR. M. ANEES S/O M. RAFIQ", status: "G + 1", reference: "U C R - 332" },
+  //   { id: "1A-90", name: "MR. ZAKA UDDIN S/O JAWAID TARIQ", status: "G + 1", reference: "R - 334" },
+  //   { id: "1A-91", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-92", name: "MR. M. ASIM S/O HAMEED ULLAH", status: "G + 1", reference: "R - 397" },
+  //   { id: "1A-93", name: "MRS. TAHIRA KHATOON W/O ALI AKHTER", status: "G", reference: "R -537" },
+  //   { id: "1A-94", name: "MRS. HUMERA SHIRAZI W/O SAEED UR REHMAN", status: "G", reference: "R - 520" },
+  //   { id: "1A-95", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-96", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-97", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-98", name: "MR. S. MASOOD HASAN ZAIDI S/O LAIQ AHMED ZAIDI", status: "G", reference: "R - 503" },
+  //   { id: "1A-99", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-100", name: "MRS. SABIRA BEGUM W/O M. ASHRAF", status: "G", reference: "R - 297" },
+  //   { id: "1A-101", name: "MRS. SAIMA ADNAN W/O ADNAN USMANI", status: "G + 1", reference: "R - 45" },
+  //   { id: "1A-102", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-103", name: "MR. M. AMIR S/O M. ARIF", status: "G + 1", reference: "R - 363" },
+  //   { id: "1A-104", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-105", name: "MR. SULEMAN S/O ABDUL KARIM", status: "G + 1", reference: "R - 318" },
+  //   { id: "1A-106", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-107", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-108", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-109", name: "MR. YAR MOHAMMAD KHAN S/O PIRA KHAN", status: "G + 1", reference: "R - 40" },
+  //   { id: "1A-110", name: "MR. M. IMRAN S/O ABDUL SALAM", status: "G + 2", reference: "R - 274" },
+  //   { id: "1A-111", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-112", name: "MR. M. ALTAF QADIR S/O", status: "G + 1", reference: "R - 501" },
+  //   { id: "1A-113", name: "MRS. FARIHA MAHMOOD W/O MAHMOOD UL HAQ SIDDIQI", status: "G + 1", reference: "R - 150" },
+  //   { id: "1A-114", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-115", name: "MR. MAHMOOD S/O ABDUL MAJEED", status: "G + 1", reference: "R - 238" },
+  //   { id: "1A-116", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-117", name: " MRS. SHOUMAILA BIBI D/O MOHAMMAD SHER KHAN", status: "G + 1", reference: "R - 235" },
+  //   { id: "1A-118", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-119", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-120", name: "MR. M. TARIQ BAWANI S/O M. HANIF BAWANI", status: "G + 1", reference: "R - 234" },
+  //   { id: "1A-121", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-122", name: "MR. ABDUL FAREED SIDDIQI S/O ABDUL AZIZ", status: "G + 1", reference: "R - 239" },
+  //   { id: "1A-123", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-124", name: "MR. M. SALEEM S/O HAROON AHMED", status: "G + 2", reference: "R - 225" },
+  //   { id: "1A-125", name: "MR. REHAN UMER S/O M. IDREES", status: "G + 1", reference: "R - 71" },
+  //   { id: "1A-126", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-127", name: "MR. M. ASLAM S/O M. A. RAZZAK", status: "G + 2", reference: "R - 398" },
+  //   { id: "1A-128", name: " MR. WAQAR AHMED QURESHI S/O M. ANSAR", status: "G + 2", reference: "R - 416" },
+  //   { id: "1A-129", name: " MR. RAHEEL AHMED QURESHI S/O M. ANSAR", status: "G + 1", reference: "R - 386" },
+  //   { id: "1A-130", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-131", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-132", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-133", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-134", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-135", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-136", name: "", status: "Plot",reference: "" },
+    
+    
+  //   ]
+  
+  // data.forEach((e)=>{
+  //   plotNumbers.push(e.id);
+  //   namesArray.push(e.name);
+  //   floorsArray.push(e.status);
+  //   shareTypeMembership.push(e.reference);
+  // })
+  
+  //     for (const month of months) {
+  //         const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+  //         const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2025" });
+  
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+  
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+  
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //       }
+  //     }
+  
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+  
+  
+  
+  // router.get("/addhousesA2026", async function (req, res, next) {
+  //   try {
+  //     const months = await monthsModel.find({Year:"2026"});
+  //     const category = "A";
+  //     let plotNumbers = [];
+  // let namesArray = [];
+  // let floorsArray = [];
+  // let shareTypeMembership = [];
+  // let contactNumbers = Array(136).fill("");
+  
+  // const data = [
+  //   { id: "1A-1", name: "MRS. UZMA MUZAFFAR S/O MUZAFFAR KHAN", status: "G", reference: "R - 517" },
+  //   { id: "1A-2", name: "MR. M. HARRIS S/O SAJEEL AHMED", status: "G", reference: "R - 512" },
+  //   { id: "1A-3", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-4", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-5", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-6", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-7", name: "MRS. SALMA JAMIL S/O JAMIL AHMED", status: "G + 1", reference: "R - 351" },
+  //   { id: "1A-8", name: "MR. M. SHOAIB KHAN S/O ZAFAR UL HASAN KHAN", status: "G", reference: "R - 341" },
+  //   { id: "1A-9", name: "MR. M. AMIR ANSARI S/O M. IBRAHIM ANSARI", status: "U C", reference: "R - 405" },
+  //   { id: "1A-9 A", name: "MR. M. SULTAN S/O M. IDREES", status: "G + 1", reference: "R - 1062" },
+  //   { id: "1A-9 B", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-9 C", name: "MR. SHAMIM UL HAQ S/O EHTESHAM UL HAQ", status: "G+1UC", reference: "R - 1058" },
+  //   { id: "1A-9 D", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-9 E", name: "E MRS. AISHA TAHIR W/O TAHIR IMRAN", status: "G+1UC", reference: "R - 990" },
+  //   { id: "1A-10", name: "MR. BASHARAT KHAN S/O BASHIR AHMED", status: "G + 1", reference: "R - 516" },
+  //   { id: "1A-11", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-12", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-13", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-14", name: "MRS. REHMANI BEGUM W/O SHAKEEL AHMED", status: "G", reference: "R - 291" },
+  //   { id: "1A-15", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-16", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-17", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-18", name: "MR. M. ZUBAIR S/O KHALIL UR REHMAN", status: "G", reference: "R - 403" },
+  //   { id: "1A-19", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-20", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-21", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-22", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-23", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-24", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-25", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-26", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-27", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-28", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-29", name: "MR. ABDUL KHALID S/O ABDUL WAJID", status: "G+1UC", reference: "R - 123" },
+  //   { id: "1A-30", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-31", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-32", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-33", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-34", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-35", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-36", name: "MR. SAFAR MUHAMMAD S/O NOOR MUHAMMAD", status: "G + 1",reference: "" },
+  //   { id: "1A-37", name: "MR. SALAHUDDIN S/O M. MUNIR UDDIN", status: "G + 1", reference: "R - 536" },
+  //   { id: "1A-38", name: "MRS. JEHNAZ SULTANA W/O", status: "G + 1", reference: "R - 535" },
+  //   { id: "1A-39", name: "MR. TALHA ISLAM S/O ISLAM UL HAQ", status: "G + 1", reference: "R - 549" },
+  //   { id: "1A-40", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-41", name: "MRS. SHAMEEN ASIM W/O ASIM FAROOQI", status: "G", reference: "R - 180" },
+  //   { id: "1A-42", name: "MR. ABDULLAH NISAR S/O NISAR AHMED", status: "G", reference: "R - 260" },
+  //   { id: "1A-43", name: "MR. ZIA UDDIN SIDDIQI S/O MAJEED UDDIN SIDDIQI", status: "G + 1", reference: "R - 73" },
+  //   { id: "1A-44", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-45", name: "MR. ABDUL RAB S/O MUHAMMAD", status: "G + 1", reference: "R - 75" },
+  //   { id: "1A-46", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-47", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-48", name: "MR. NASEER AHMED S/O GUL MOHAMMAD", status: "G + 1", reference: "R - 352" },
+  //   { id: "1A-49", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-50", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-51", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-52", name: "MRS. NAVEEN AFSAR W/O AFSAR ALAM SIDDIQI", status: "G", reference: "R - 11" },
+  //   { id: "1A-53", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-54", name: "MR. ABDUL MAJID S/O AZIZ KHAN", status: "G + 1", reference: "R - 430" },
+  //   { id: "1A-55", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-56", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-57", name: "MR. KHALID SAIFULLAH S/O AHMAD ALI BAIG", status: "G + 1", reference: "R - 60" },
+  //   { id: "1A-58", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-59", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-60", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-61", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-62", name: "MR. HABIB ANJUM S/O ANJUM RAFIQ", status: "G + 1", reference: "R - 468" },
+  //   { id: "1A-63", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-64", name: "MRS. SEEMA KHATOON W/O M. MANSOOR", status: "G + 1", reference: "R - 364" },
+  //   { id: "1A-65", name: "MR. M. ADEEL S/O IFTIKHAR UDDIN", status: "G + 1", reference: "R - 58" },
+  //   { id: "1A-66", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-67", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-68", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-69", name: "MRS. SHAHZADI PUKHRAJ W/O", status: "G + 1", reference: "R - 529" },
+  //   { id: "1A-70", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-71", name: "MRS. AMBER DANISH W/O DANISH RAZA", status: "G + 1", reference: "R - 310" },
+  //   { id: "1A-72", name: "MR. M. ZAKIR S/O M. FAROOQ", status: "G + 1", reference: "R - 168" },
+  //   { id: "1A-73", name: "MRS.GHAZALA NADEEM W/O M. NADEEM HASHMI", status: "U C", reference: "R - 153" },
+  //   { id: "1A-74", name: "MRS. KULSOOM W/O M. SADDIQ KARAR", status: "G + 1", reference: "R - 77" },
+  //   { id: "1A-75", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-76", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-77", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-78", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-79", name: "MRS. NUSRAT ARA W/O M. SHAFIQ", status: "G + 1", reference: "R - 431" },
+  //   { id: "1A-80", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-81", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-82", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-83", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-84", name: "MR. ASHFAQ AHMED S/O JUMMA KHAN", status: "G", reference: "R - 57" },
+  //   { id: "1A-85", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-86", name: "MR. FAZLE MAULA S/O FAZAL MOHAMMAD", status: "G + 1", reference: "R - 466" },
+  //   { id: "1A-87", name: "MR. ZULFIQAR ALI S/O MEHRAB BHUTTO", status: "G + 1", reference: "R - 28" },
+  //   { id: "1A-88", name: "MRS. FOUZIA W/O M. ZUBAIR MAIRAJ", status: "G + 1", reference: "R - 527" },
+  //   { id: "1A-89", name: "MR. M. ANEES S/O M. RAFIQ", status: "G + 1", reference: "U C R - 332" },
+  //   { id: "1A-90", name: "MR. ZAKA UDDIN S/O JAWAID TARIQ", status: "G + 1", reference: "R - 334" },
+  //   { id: "1A-91", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-92", name: "MR. M. ASIM S/O HAMEED ULLAH", status: "G + 1", reference: "R - 397" },
+  //   { id: "1A-93", name: "MRS. TAHIRA KHATOON W/O ALI AKHTER", status: "G", reference: "R -537" },
+  //   { id: "1A-94", name: "MRS. HUMERA SHIRAZI W/O SAEED UR REHMAN", status: "G", reference: "R - 520" },
+  //   { id: "1A-95", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-96", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-97", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-98", name: "MR. S. MASOOD HASAN ZAIDI S/O LAIQ AHMED ZAIDI", status: "G", reference: "R - 503" },
+  //   { id: "1A-99", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-100", name: "MRS. SABIRA BEGUM W/O M. ASHRAF", status: "G", reference: "R - 297" },
+  //   { id: "1A-101", name: "MRS. SAIMA ADNAN W/O ADNAN USMANI", status: "G + 1", reference: "R - 45" },
+  //   { id: "1A-102", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-103", name: "MR. M. AMIR S/O M. ARIF", status: "G + 1", reference: "R - 363" },
+  //   { id: "1A-104", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-105", name: "MR. SULEMAN S/O ABDUL KARIM", status: "G + 1", reference: "R - 318" },
+  //   { id: "1A-106", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-107", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-108", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-109", name: "MR. YAR MOHAMMAD KHAN S/O PIRA KHAN", status: "G + 1", reference: "R - 40" },
+  //   { id: "1A-110", name: "MR. M. IMRAN S/O ABDUL SALAM", status: "G + 2", reference: "R - 274" },
+  //   { id: "1A-111", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-112", name: "MR. M. ALTAF QADIR S/O", status: "G + 1", reference: "R - 501" },
+  //   { id: "1A-113", name: "MRS. FARIHA MAHMOOD W/O MAHMOOD UL HAQ SIDDIQI", status: "G + 1", reference: "R - 150" },
+  //   { id: "1A-114", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-115", name: "MR. MAHMOOD S/O ABDUL MAJEED", status: "G + 1", reference: "R - 238" },
+  //   { id: "1A-116", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-117", name: " MRS. SHOUMAILA BIBI D/O MOHAMMAD SHER KHAN", status: "G + 1", reference: "R - 235" },
+  //   { id: "1A-118", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-119", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-120", name: "MR. M. TARIQ BAWANI S/O M. HANIF BAWANI", status: "G + 1", reference: "R - 234" },
+  //   { id: "1A-121", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-122", name: "MR. ABDUL FAREED SIDDIQI S/O ABDUL AZIZ", status: "G + 1", reference: "R - 239" },
+  //   { id: "1A-123", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-124", name: "MR. M. SALEEM S/O HAROON AHMED", status: "G + 2", reference: "R - 225" },
+  //   { id: "1A-125", name: "MR. REHAN UMER S/O M. IDREES", status: "G + 1", reference: "R - 71" },
+  //   { id: "1A-126", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-127", name: "MR. M. ASLAM S/O M. A. RAZZAK", status: "G + 2", reference: "R - 398" },
+  //   { id: "1A-128", name: " MR. WAQAR AHMED QURESHI S/O M. ANSAR", status: "G + 2", reference: "R - 416" },
+  //   { id: "1A-129", name: " MR. RAHEEL AHMED QURESHI S/O M. ANSAR", status: "G + 1", reference: "R - 386" },
+  //   { id: "1A-130", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-131", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-132", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-133", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-134", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-135", name: "", status: "Plot",reference: "" },
+  //   { id: "1A-136", name: "", status: "Plot",reference: "" },
+    
+    
+  //   ]
+  
+  // data.forEach((e)=>{
+  //   plotNumbers.push(e.id);
+  //   namesArray.push(e.name);
+  //   floorsArray.push(e.status);
+  //   shareTypeMembership.push(e.reference);
+  // })
+  
+  //     for (const month of months) {
+  //         const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+  //         const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2026" });
+  
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+  
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+  
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //       }
+  //     }
+  
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+
+
+
+
+
+
+  // router.get("/addhousesB2025", async function (req, res, next) {
+  //   try {
+  //    const months = await monthsModel.find({Year:"2025"});
+  //     const category = "B";
+  //     let plotNumbers = [];
+  //     let namesArray = [];
+  //     let floorsArray = [];
+  //     let shareTypeMembership = [];
+  //     let contactNumbers = Array(136).fill("");
+  
+  
+  // const dataforB = [
+  //   { id: " B-1", name: "MR. M. FAROOQ S/O M. YOUNUS", status: "G + 1", reference: "R - 305" },
+  //   { id: " B-2", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 A", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 B", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 C", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 D", name: "MR. BAHADUR SHER KHAN S/O", status: "G + 2", reference: "R - 1043" },
+  //   { id: " B-4", name: "", status: "Plot", reference: "" },
+  //   { id: " B-5", name: "MR. M. OMAIR S/O", status: "G + 1", reference: "R - 328" },
+  //   { id: " B-6", name: "", status: "Plot", reference: "" },
+  //   { id: " B-7", name: " MRS. YASMEEN IQBAL W/O ", status: "G + 1", reference: "R - 519" },
+  //   { id: " B-8", name: "", status: "Plot", reference: "" },
+  //   { id: " B-9", name: "MR. BASIT KHALIL S/O KHALIL AHMED SIDDIQI", status: "G", reference: "R - 458" },
+  //   { id: " B-10", name: "", status: "Plot", reference: "" },
+  //   { id: " B-11", name: " MRS. SHABANA YASMEEN W/O M. SIDDIQUE", status: "G", reference: "R - 526" },
+  //   { id: " B-12", name: "  MR. FARRUKH RAZA S/O MEHMOOD", status: "G", reference: "R - 457" },
+  //   { id: " B-13", name: "", status: "Plot", reference: "" },
+  //   { id: " B-14", name: "", status: "Plot", reference: "" },
+  //   { id: " B-15", name: "", status: "Plot", reference: "" },
+  //   { id: " B-16", name: "", status: "Plot", reference: "" },
+  //   { id: " B-17", name: "MR. M. ADIL HUSSAIN S/O MUSHARRAF HUSSAIN", status: "G + 1", reference: " R - 218" },
+  //   { id: " B-18", name: "", status: "Plot", reference: "" },
+  //   { id: " B-19", name: "", status: "Plot", reference: "" },
+  //   { id: " B-20", name: "", status: "Plot", reference: "" },
+  //   { id: " B-21", name: "", status: "Plot", reference: "" },
+  //   { id: " B-22", name: "", status: "Plot", reference: "" },
+  //   { id: " B-23", name: "MR. MUNAWAR ALI ALVI S/O MUZAFFAR ALI ALVI", status: "G", reference: " R - 644" },
+  //   { id: " B-24", name: "", status: "Plot", reference: "" },
+  //   { id: " B-25", name: "MR. TALAL AHMED S/O CH. SAEED AHMED", status: "Plot", reference: " R - 496" },
+  //   { id: " B-26", name: "MR. M. FRAZ S/O SAMI ULLAH", status: "G + 1", reference: " R - 497" },
+  //   { id: " B-27", name: " MR. S. WASEEM HUSSAIN S/O S. IFTEKHAR HUSSAIN", status: "Plot", reference: " R - 499" },
+  //   { id: " B-28", name: " MRS. HINA NAZ W/O QASIM ALI", status: "Plot", reference: " R - 321" },
+  //   { id: " B-29", name: " MR. S. ZAHOOR HASAN S/O ISHRAT HASAN", status: "Plot", reference: " R - 459" },
+  //   { id: " B-30", name: "MR. DOST ALI S/O MOOSA KHAN", status: "Plot", reference: "R - 462" },
+  //   { id: " B-31", name: "MR. M. ANAS S/O M. AFAAQ", status: "Plot", reference: "R - 461" },
+  //   { id: " B-32", name: "MR. BABER S/O AMEER GUL", status: "Plot", reference: "R - 460" },
+  //   { id: " B-33", name: "MR. JAMIL NASIR S/O CH. NASIR UDDIN", status: "Plot", reference: "R - 70" },
+  //   { id: " B-34", name: "MR. ABDUL RAZZAQ S/O LAL BAKSH", status: "Plot", reference: "R - 561" },
+  //   { id: " B-35", name: "MR. AKHTAR SAEED S/O QAZI MEHBOOB ILAHI", status: "Plot", reference: "R - 327" },
+  //   { id: " B-36", name: "MR. ABDUL LATIF S/O ALI AHMED", status: "Plot", reference: "R - 98" },
+  //   { id: " B-37", name: "MR. FAROOQ KHAN S/O NASEEM M. KHAN", status: "Plot", reference: "R - 304" },
+  //   { id: " B-38", name: "MR. M. OWAIS S/O M. AFAAQ", status: "Plot", reference: "R - 473" },
+  //   { id: " B-39", name: "MR. TAYAB ULLAH S/O TAIMUR KHAN", status: "Plot", reference: "R - 474" },
+  //   { id: " B-40", name: "MR. M. IBAD UR REHMAN S/O", status: "Plot", reference: "R - 475" },
+  //   { id: " B-41", name: "MR. AHMER SAMI S/O ABDUL SAMI", status: "G + 1", reference: "R - 121" },
+  //   { id: " B-42", name: "", status: "Plot", reference: "" },
+  //   { id: " B-43", name: "MR. S. MUKHTAR HASAN S/O G", status: "Plot", reference: "R - 533" },
+  //   { id: " B-44", name: "MRS. ALMAS MAHJABEEN W/O S.M. AIJAZ UL HAQ", status: "G + 1", reference: "R - 534" },
+  //   { id: " B-45", name: "", status: "Plot", reference: "" },
+  //   { id: " B-46", name: "MR. ABDUL SAMAD S/O KHIRO", status: "G + 1", reference: "R - 455" },
+  //   { id: " B-47", name: "", status: "Plot", reference: "" },
+  //   { id: " B-48", name: "MR. FARHAN AHMED S/O MOIN UL ISLAM", status: "G + 1", reference: "R - 102" },
+  //   { id: " B-49", name: "", status: "Plot", reference: "" },
+  //   { id: " B-50", name: "MR. DANISH RAZA S/O MEHMOOD", status: "G", reference: "R - 476" },
+  //   { id: " B-51", name: "MRS. AZIZ UN NISA W/O FARRUKH RAZA", status: "G", reference: "R - 100" },
+  //   { id: " B-52", name: "MR. S. NAJMUL HASAN NAJMI", status: "G + 1", reference: "R - 280" },
+  //   { id: " B-53", name: "", status: "Plot", reference: "" },
+  //   { id: " B-54", name: "MRS. SAHIBA SULTANA W/O M. MEHTAB", status: "G", reference: "R - 99" },
+  //   { id: " B-55", name: "", status: "Plot", reference: "" },
+  //   { id: " B-56", name: "", status: "Plot", reference: "" },
+  //   { id: " B-57", name: "", status: "Plot", reference: "" },
+  //   { id: " B-58", name: "", status: "Plot", reference: "" }
+  //   ]
+  
+  
+  // dataforB.forEach((e)=>{
+  //   plotNumbers.push(e.id);
+  //   namesArray.push(e.name);
+  //   floorsArray.push(e.status);
+  //   shareTypeMembership.push(e.reference);
+  // })
+  
+  //     for (const month of months) {
+  //       const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2025" });
+  //       const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2025" });
+  
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+  
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+  
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2025",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //       }
+  //     }
+  
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+  
+  // router.get("/addhousesB2026", async function (req, res, next) {
+  //   try {
+  //    const months = await monthsModel.find({Year:"2026"});
+  //     const category = "B";
+  //     let plotNumbers = [];
+  //     let namesArray = [];
+  //     let floorsArray = [];
+  //     let shareTypeMembership = [];
+  //     let contactNumbers = Array(136).fill("");
+  
+  
+  // const dataforB = [
+  //   { id: " B-1", name: "MR. M. FAROOQ S/O M. YOUNUS", status: "G + 1", reference: "R - 305" },
+  //   { id: " B-2", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 A", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 B", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 C", name: "", status: "Plot", reference: "" },
+  //   { id: " B-3 D", name: "MR. BAHADUR SHER KHAN S/O", status: "G + 2", reference: "R - 1043" },
+  //   { id: " B-4", name: "", status: "Plot", reference: "" },
+  //   { id: " B-5", name: "MR. M. OMAIR S/O", status: "G + 1", reference: "R - 328" },
+  //   { id: " B-6", name: "", status: "Plot", reference: "" },
+  //   { id: " B-7", name: " MRS. YASMEEN IQBAL W/O ", status: "G + 1", reference: "R - 519" },
+  //   { id: " B-8", name: "", status: "Plot", reference: "" },
+  //   { id: " B-9", name: "MR. BASIT KHALIL S/O KHALIL AHMED SIDDIQI", status: "G", reference: "R - 458" },
+  //   { id: " B-10", name: "", status: "Plot", reference: "" },
+  //   { id: " B-11", name: " MRS. SHABANA YASMEEN W/O M. SIDDIQUE", status: "G", reference: "R - 526" },
+  //   { id: " B-12", name: "  MR. FARRUKH RAZA S/O MEHMOOD", status: "G", reference: "R - 457" },
+  //   { id: " B-13", name: "", status: "Plot", reference: "" },
+  //   { id: " B-14", name: "", status: "Plot", reference: "" },
+  //   { id: " B-15", name: "", status: "Plot", reference: "" },
+  //   { id: " B-16", name: "", status: "Plot", reference: "" },
+  //   { id: " B-17", name: "MR. M. ADIL HUSSAIN S/O MUSHARRAF HUSSAIN", status: "G + 1", reference: " R - 218" },
+  //   { id: " B-18", name: "", status: "Plot", reference: "" },
+  //   { id: " B-19", name: "", status: "Plot", reference: "" },
+  //   { id: " B-20", name: "", status: "Plot", reference: "" },
+  //   { id: " B-21", name: "", status: "Plot", reference: "" },
+  //   { id: " B-22", name: "", status: "Plot", reference: "" },
+  //   { id: " B-23", name: "MR. MUNAWAR ALI ALVI S/O MUZAFFAR ALI ALVI", status: "G", reference: " R - 644" },
+  //   { id: " B-24", name: "", status: "Plot", reference: "" },
+  //   { id: " B-25", name: "MR. TALAL AHMED S/O CH. SAEED AHMED", status: "Plot", reference: " R - 496" },
+  //   { id: " B-26", name: "MR. M. FRAZ S/O SAMI ULLAH", status: "G + 1", reference: " R - 497" },
+  //   { id: " B-27", name: " MR. S. WASEEM HUSSAIN S/O S. IFTEKHAR HUSSAIN", status: "Plot", reference: " R - 499" },
+  //   { id: " B-28", name: " MRS. HINA NAZ W/O QASIM ALI", status: "Plot", reference: " R - 321" },
+  //   { id: " B-29", name: " MR. S. ZAHOOR HASAN S/O ISHRAT HASAN", status: "Plot", reference: " R - 459" },
+  //   { id: " B-30", name: "MR. DOST ALI S/O MOOSA KHAN", status: "Plot", reference: "R - 462" },
+  //   { id: " B-31", name: "MR. M. ANAS S/O M. AFAAQ", status: "Plot", reference: "R - 461" },
+  //   { id: " B-32", name: "MR. BABER S/O AMEER GUL", status: "Plot", reference: "R - 460" },
+  //   { id: " B-33", name: "MR. JAMIL NASIR S/O CH. NASIR UDDIN", status: "Plot", reference: "R - 70" },
+  //   { id: " B-34", name: "MR. ABDUL RAZZAQ S/O LAL BAKSH", status: "Plot", reference: "R - 561" },
+  //   { id: " B-35", name: "MR. AKHTAR SAEED S/O QAZI MEHBOOB ILAHI", status: "Plot", reference: "R - 327" },
+  //   { id: " B-36", name: "MR. ABDUL LATIF S/O ALI AHMED", status: "Plot", reference: "R - 98" },
+  //   { id: " B-37", name: "MR. FAROOQ KHAN S/O NASEEM M. KHAN", status: "Plot", reference: "R - 304" },
+  //   { id: " B-38", name: "MR. M. OWAIS S/O M. AFAAQ", status: "Plot", reference: "R - 473" },
+  //   { id: " B-39", name: "MR. TAYAB ULLAH S/O TAIMUR KHAN", status: "Plot", reference: "R - 474" },
+  //   { id: " B-40", name: "MR. M. IBAD UR REHMAN S/O", status: "Plot", reference: "R - 475" },
+  //   { id: " B-41", name: "MR. AHMER SAMI S/O ABDUL SAMI", status: "G + 1", reference: "R - 121" },
+  //   { id: " B-42", name: "", status: "Plot", reference: "" },
+  //   { id: " B-43", name: "MR. S. MUKHTAR HASAN S/O G", status: "Plot", reference: "R - 533" },
+  //   { id: " B-44", name: "MRS. ALMAS MAHJABEEN W/O S.M. AIJAZ UL HAQ", status: "G + 1", reference: "R - 534" },
+  //   { id: " B-45", name: "", status: "Plot", reference: "" },
+  //   { id: " B-46", name: "MR. ABDUL SAMAD S/O KHIRO", status: "G + 1", reference: "R - 455" },
+  //   { id: " B-47", name: "", status: "Plot", reference: "" },
+  //   { id: " B-48", name: "MR. FARHAN AHMED S/O MOIN UL ISLAM", status: "G + 1", reference: "R - 102" },
+  //   { id: " B-49", name: "", status: "Plot", reference: "" },
+  //   { id: " B-50", name: "MR. DANISH RAZA S/O MEHMOOD", status: "G", reference: "R - 476" },
+  //   { id: " B-51", name: "MRS. AZIZ UN NISA W/O FARRUKH RAZA", status: "G", reference: "R - 100" },
+  //   { id: " B-52", name: "MR. S. NAJMUL HASAN NAJMI", status: "G + 1", reference: "R - 280" },
+  //   { id: " B-53", name: "", status: "Plot", reference: "" },
+  //   { id: " B-54", name: "MRS. SAHIBA SULTANA W/O M. MEHTAB", status: "G", reference: "R - 99" },
+  //   { id: " B-55", name: "", status: "Plot", reference: "" },
+  //   { id: " B-56", name: "", status: "Plot", reference: "" },
+  //   { id: " B-57", name: "", status: "Plot", reference: "" },
+  //   { id: " B-58", name: "", status: "Plot", reference: "" }
+  //   ]
+  
+  
+  // dataforB.forEach((e)=>{
+  //   plotNumbers.push(e.id);
+  //   namesArray.push(e.name);
+  //   floorsArray.push(e.status);
+  //   shareTypeMembership.push(e.reference);
+  // })
+  
+  //     for (const month of months) {
+  //       const monthOfThisCategory = await monthsModel.findOne({ name: month.name , Year:"2026" });
+  //       const categoryOfThisMonth = await houseCategoryModel.findOne({ name: category, month: month.name , Year:"2026" });
+  
+  //       for (let i = 0; i < plotNumbers.length; i++) {
+  //         // Floor logic
+  //         let floorLabel = floorsArray[i];
+  //         let floorsCount = 0;
+  //         if (floorLabel === "G") floorsCount = 1;
+  //         else if (floorLabel === "G + 1") floorsCount = 2;
+  //         else if (floorLabel === "G + 2") floorsCount = 3;
+  //         else if (floorLabel === "G + 3") floorsCount = 4;
+  //         else if (floorLabel === "G + 4") floorsCount = 5;
+  //         else if (floorLabel === "Plot") floorsCount = 0;
+  
+  //         const baseAmount = categoryOfThisMonth.amount_per_house;
+  //         if (isNaN(baseAmount)) {
+  //           throw new Error("amount_per_house is not a valid number.");
+  //         }
+  
+  //         if(floorsCount === 0) {
+  //           const amountToBeCollectedforZero = 0;
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollectedforZero,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //         else{
+  //           const amountToBeCollected = baseAmount + ((floorsCount - 1) * 1000);
+  //           await houseModel.create({
+  //             sNo:Number(i+1),
+  //             Year:"2026",
+  //             name: plotNumbers[i],
+  //             OwnerName: namesArray[i],
+  //             OwnerPhone: contactNumbers[i],
+  //             amount_to_be_collected: amountToBeCollected,
+  //             is_amount_collected: false,
+  //             category,
+  //             month:month.name,
+  //             shareTypeMembershipNumber: shareTypeMembership[i],
+  //             floors: floorLabel,
+  //             monthId: monthOfThisCategory._id,
+  //             ParentHouseid: categoryOfThisMonth._id,
+  //           });
+  //         }
+  //       }
+  //     }
+  
+  //     res.send("Houses added successfully with correct amount calculation");
+  //   } catch (error) {
+  //     console.error("Error adding houses:", error);
+  //     res.status(500).send("Server Error");
+  //   }
+  // });
+  
+  
+  

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Al Ashraf Society Inventory Management System</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white min-h-screen flex flex-col items-center justify-center p-6">
+  
+    <%if(isLoggedInUser) {%>
+  <!-- Navbar -->
+  <nav class="w-full bg-gray-900 p-4 fixed top-0 left-0 flex justify-between items-center shadow-lg">
+    <h2 class="text-xl font-semibold ml-6">Al Ashraf Society</h2>
+    <div class="space-x-4 mr-6">
+      <a href="/profile" class="bg-blue-500 px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">Return to Profile</a>
+      <a href="/logout" class="bg-red-500 px-4 py-2 rounded-lg shadow hover:bg-red-600 transition">Logout</a>
+    </div>
+  </nav>
+<%} else{%>
+    <nav class="w-full bg-gray-900 p-4 fixed top-0 left-0 flex justify-between items-center shadow-lg">
+        <h2 class="text-xl font-semibold ml-6">Al Ashraf Society</h2>
+        <div class="space-x-4 mr-6">
+          <a href="/admin-login" class="bg-blue-500 px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">Login</a>
+        </div>
+      </nav>
+
+    <%}%>
+  <!-- Main Content -->
+  <div class="mt-20 text-center">
+    <h1 class="text-6xl font-bold mb-8">Al Ashraf Society Management System</h1>
+    <a href="/checkstatus" class="bg-yellow-500 text-white py-3 px-8 rounded-lg shadow-lg text-lg font-semibold hover:bg-yellow-600 transition transform hover:scale-105">
+      Check Your House Paying Status
+    </a>
+  </div>
+
+</body>
+</html>

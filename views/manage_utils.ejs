@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Maintenance Fee Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <nav class="bg-gray-800 text-white p-4 flex justify-between items-center shadow-lg">
+        <span class="text-lg font-bold"><%= usernames.username %></span>
+        <a href="/logout" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Logout</a>
+    </nav>
+    
+    <div class="container mx-auto mt-8 p-6">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-100">Edit Maintenance Fee Plan</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <!-- Current Year Amount Card -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md flex flex-col justify-center">
+                <h2 class="text-xl font-semibold mb-2 text-gray-100">Current Year Utility Amount</h2>
+                <p class="text-gray-300 text-2xl">Total: <span class="font-bold text-white">Rs. <%= currentYearAmount %></span></p>
+            </div>
+            
+            <!-- Current Month Amount Card -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md ">
+                <h2 class="text-xl font-semibold mb-2 text-gray-100">Current Month Utility Amount</h2>
+                <p class="text-gray-300 text-lg">Total: <span class="font-bold text-white">Rs. <%= currentMonthUtils %></span></p>
+                <a href="/<%=currentYear%>/month/<%=currentMonth%>/addutility" class="bg-blue-500 px-4 py-2 mt-4 text-white rounded hover:bg-blue-600 inline-block">Add Utility</a>
+            </div>
+            
+            <!-- Show Utilities Card -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-md col-span-2 text-center">
+                <h2 class="text-xl font-semibold mb-4 text-gray-100">Show Utilities</h2>
+                <div class="flex justify-center gap-4">
+                    <a href="/<%=currentYear%>/month/<%=currentMonth%>/showutilities" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">For Current Month</a>
+                    <a href="/<%=currentYear%>/showallmonths" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition">For All Months</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

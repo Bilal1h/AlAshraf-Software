@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Show Houses</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+  <style>
+    /* Style for the DataTables dropdown */
+    .dataTables_length select {
+      background-color: white !important; /* Set dropdown background to white */
+      color: black !important; /* Set text color to black */
+      border: 1px solid #ccc; /* Add a subtle border */
+      padding: 5px;
+      border-radius: 5px;
+    }
+  
+    /* Ensure dropdown options are visible */
+    .dataTables_length select option {
+      background-color: white;
+      color: black;
+    }
+  </style>
+  
+</head>
+
+<body class="bg-[#1A202C] text-white">
+  <div class="w-full h-36 flex items-center justify-center mb-12 flex-col">
+    <a href="/showcategories/<%=Year%>/<%=month%>/" class="bg-blue-800 text-white px-2 py-2 mb-6">Go Back</a>
+    <h1 class="text-5xl">All <%= houses.category %> Houses</h1>
+  </div>
+
+  <div class="w-full flex justify-center items-center">
+    <div class="w-[95%] overflow-x-hidden"> 
+      <table id="myTable" class="w-full">
+        <thead>
+          <tr class="text-white">
+            <th class="p-3">S. No.</th>
+            <th class="p-3">House #</th>
+            <th class="p-3">Owner Name</th>
+            <th class="p-3">Category</th>
+            <th class="p-3">Monthly Maintenance</th>
+            <th class="p-3">Is Amount Paid?</th>
+            <th class="p-3">Floors</th>
+            <th class="p-3">Owner Phone Number</th>
+            <th class="p-3">Mark Paid/Unpaid</th>
+            <th class="p-3">Additionals</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% houses.forEach(function(elem) { %>
+            <tr class="text-white">
+              <td class="p-3"><%= elem.sNo %></td>
+              <td class="p-3"><%= elem.name %></td>
+              <td class="p-3"><%= elem.OwnerName %></td>
+              <td class="p-3"><%= elem.category %></td>
+              <td class="p-3"><%= elem.amount_to_be_collected %></td>
+              <td class="p-3"><%= elem.is_amount_collected ? "Yes" : "No" %></td>
+              <td class="p-3"><%= elem.floors %></td>
+              <td class="p-3"><%= elem.OwnerPhone %></td>
+ 
+              <td>
+                <form action="/<%=Year%>/<%=month%>/edit/check/status/<%= elem.name %>" id="checkform" method="POST">
+                  <input type="checkbox" name="editamountpaid" <%= elem.is_amount_collected ? "checked" : "" %> id="">
+                  <script>
+                    document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+                      checkbox.addEventListener('change', function() {
+                        this.closest('form').submit(); // Submits the form closest to the checkbox
+                      });
+                    });
+                  </script>
+                  
+                </form>
+              </td>
+                 <td class="p-3">
+                <a href="/<%=Year%>/<%=month%>/edit/status/<%= elem.name %>">
+                  <code class="bg-blue-900 px-2 text-white rounded">Edit Info</code>
+                </a>
+              </td> 
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+  <script>
+    let table = new DataTable('#myTable',{
+      "pageLength": -1, // Show all entries
+    "lengthMenu": [[-1, 10, 20, 50, 100], ["All", 10, 20, 50, 100]] // Add "All" option in dropdown
+
+    });
+  </script>
+</body>
+
+</html>

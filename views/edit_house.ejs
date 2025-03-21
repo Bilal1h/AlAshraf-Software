@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit House</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white min-h-screen flex flex-col items-center justify-center p-6">
+  <div class="w-full h-[700px] max-w-2xl bg-white rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">Edit House Data</h1>
+    <h2 class="text-2xl text-center text-zinc-800">For <%=product.name%></h2>
+    <form action="/<%=Year%>/<%=month%>/edit/status/<%= product.name %>" method="POST">
+      
+      <div class="mb-6">
+        <label for="editownername" class="block text-gray-700 text-lg font-semibold mb-2">Owner Name</label>
+        <input type="text" id="editownername" name="editownername" value="<%= product.OwnerName %>" class="w-full px-4 py-2 border rounded-lg text-gray-800" />
+      </div>
+      <div class="mb-6">
+        <label for="editownerphone" class="block text-gray-700 text-lg font-semibold mb-2">Owner Name</label>
+        <input type="tel" id="editownerphone" name="editownerphone" min="0" value="<%= product.OwnerPhone %>" class="w-full px-4 py-2 border rounded-lg text-gray-800" />
+      </div>
+      <div class="mb-6">
+        <label for="editamount" class="block text-gray-700 text-lg font-semibold mb-2">Monthly Maintenance</label>
+        <input type="number" disabled id="editamount" name="editamount" min="0" value="<%= product.amount_to_be_collected %>" class="w-full px-4 py-2 border rounded-lg text-gray-800" placeholder="Number of Floors" />
+      </div>
+      <div class="mb-6">
+       <label for="editfloors" class="text-zinc-800">Floors</label>
+      <select name="editfloors" id="" class="bg-white text-gray-800 border rounded-lg w-full px-4 py-2">
+
+   
+          <option value="Plot" <%= product.floors === 'Plot' ? 'selected' : '' %>>Plot</option>
+          <option value="G" <%= product.floors === 'G' ? 'selected' : '' %>>G</option>
+          <option value="G+1" <%= product.floors === 'G1' ? 'selected' : '' %>>G + 1</option>
+          <option value="G+2" <%= product.floors === 'G2' ? 'selected' : '' %>>G + 2</option>
+          <option value="G+3" <%= product.floors === 'G3' ? 'selected' : '' %>>G + 3</option>
+          <option value="G+4" <%= product.floors === 'G4' ? 'selected' : '' %>>G + 4</option>
+       
+        
+        
+
+      </select>
+
+      </div>
+      <div class="mb-6">
+        <label for="editcheckbox" class="block text-gray-700 text-lg font-semibold mb-2">Is Amount Collected?</label>
+        <input type="checkbox" id="editcheckbox" name="is_amount_collected" class="h-6 w-6 text-indigo-600" <% if(product.is_amount_collected) { %> checked <% } %> />
+      </div>
+      <div class="flex justify-center">
+        <input type="submit" value="Edit House Data" class="bg-blue-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition transform hover:scale-105 cursor-pointer" />
+      </div>
+    </form>
+  </div>
+</body>
+</html>

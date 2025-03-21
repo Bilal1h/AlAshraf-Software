@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Edit Additional Fee</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-800 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-3xl bg-zinc-900 shadow-xl rounded-xl p-8 overflow-y-auto">
+    <h1 class="text-3xl font-bold text-center text-white mb-6">Edit Additional Fee</h1>
+    <form action="/<%=Year%>/<%=month%>/edit/<%= categories.name %>/additional-floor" method="POST" class="space-y-4">
+
+      <!-- Select Month -->
+      <div>
+        <label for="monthselect" class="block text-lg font-semibold mb-2">Select Month</label>
+        <select name="selectMonth" id="monthselect" class="w-full p-3 rounded-lg bg-zinc-800 text-white border border-gray-700">
+          <option value="January" <%= month === "January" ? "selected" : "" %>>January</option>
+          <option value="February" <%= month === "February" ? "selected" : "" %>>February</option>
+          <option value="March" <%= month === "March" ? "selected" : "" %>>March</option>
+          <option value="April" <%= month === "April" ? "selected" : "" %>>April</option>
+          <option value="May" <%= month === "May" ? "selected" : "" %>>May</option>
+          <option value="June" <%= month === "June" ? "selected" : "" %>>June</option>
+          <option value="July" <%= month === "July" ? "selected" : "" %>>July</option>
+          <option value="August" <%= month === "August" ? "selected" : "" %>>August</option>
+          <option value="September" <%= month === "September" ? "selected" : "" %>>September</option>
+          <option value="October" <%= month === "October" ? "selected" : "" %>>October</option>
+          <option value="November" <%= month === "November" ? "selected" : "" %>>November</option>
+          <option value="December" <%= month === "December" ? "selected" : "" %>>December</option>
+        </select>
+      </div>
+
+      <!-- Select Category -->
+      <div>
+        <label for="selectCategory" class="block text-lg font-semibold mb-2">Select Category</label>
+        <select name="selectCategory" id="selectCategory" class="w-full p-3 rounded-lg bg-zinc-800 text-white border border-gray-700">
+          <% if (categories) { %>
+            <option value="<%= categories.name %>" selected><%= categories.name %></option>
+          <% } else { %>
+            <option value="">No Categories Available</option>
+          <% } %>
+        </select>
+      </div>
+
+      <!-- Amount Fields -->
+      <% ["G", "G1", "G2", "G3", "G4"].forEach(level => { %>
+        <div>
+          <label for="amount<%= level %>" class="block text-lg font-semibold mb-2">Amount for <%= level %></label>
+          <input type="number" id="amount<%= level %>" name="amount<%= level %>" min="0" class="w-full p-3 rounded-lg bg-zinc-800 text-white border border-gray-700" value="<%= categories['amount_for_' + level] || 0 %>"/>
+        </div>
+      <% }); %>
+
+      <!-- Submit Button -->
+      <div class="flex justify-center">
+        <button type="submit" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg">
+          Update Fee
+        </button>
+      </div>
+
+    </form>
+  </div>
+</body>
+</html>

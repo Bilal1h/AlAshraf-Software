@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Utility</title>
+  <link rel="stylesheet" href="/stylesheets/style.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-800 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Add An Extra Utility</h1>
+    <form action="/<%=Year%>/month/<%= month %>/addutility" method="post">
+      <div class="mb-4">
+        <label for="monthUtils" class="block text-gray-700 text-lg font-semibold mb-2">Utility Month</label>
+        <input type="text" class="w-full px-4 py-2 border rounded-lg text-gray-800 bg-gray-400" name="monthUtils" id="monthUtils" disabled value="<%= month %>" />
+      </div>
+      <div class="mb-4">
+        <label for="utilsName" class="block text-gray-700 text-lg font-semibold mb-2">Utility Name</label>
+        <input type="text" class="w-full px-4 py-2 border rounded-lg text-gray-800" placeholder="Utility Name" id="utilsName" name="utilityname" required />
+      </div>
+      <div class="mb-4">
+        <label for="utilsAmount" class="block text-gray-700 text-lg font-semibold mb-2">Utility Amount</label>
+        <input type="number" class="w-full px-4 py-2 border rounded-lg text-gray-800" placeholder="Amount" id="utilsAmount" name="utilityamount" required />
+      </div>
+      <div class="flex justify-center">
+        <button type="submit" class="bg-blue-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition transform hover:scale-105">Add Utility</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

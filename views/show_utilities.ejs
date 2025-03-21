@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Show Utilities</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+  <style>
+    /* Style for the DataTables dropdown */
+    .dataTables_length select {
+      background-color: #27272A !important; /* Set dropdown background to white */
+      color: #fff !important; /* Set text color to black */
+      border: 1px solid #ccc; /* Add a subtle border */
+      padding: 5px;
+      border-radius: 5px;
+    }
+  
+    /* Ensure dropdown options are visible */
+    .dataTables_length select option {
+      background-color: #27272A;
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body class="bg-zinc-800 text-white">
+  <div class="w-full h-36 flex items-center justify-center mb-12 flex-col">
+    <a href="/<%=Year%>/month/<%=monthName%>/" class="bg-blue-800 text-white px-2 py-2 mb-6">Go Back</a>
+    <h1 class="text-5xl">All <%= month %> Utilities</h1>
+    <a href="/month/<%=month%>/addutility" class="w-60 bg-indigo-700 text-md mt-4 px-4 rounded-md text-center">Add Utility</a>
+
+  </div>
+
+ 
+  <div class="w-full flex justify-center items-center">
+    <div class="w-[95%] overflow-x-hidden"> 
+      <table id="myTable" class="w-full">
+        <thead>
+          <tr class="text-white">
+            <th class="p-3">Date</th>
+            <th class="p-3">Utility Name</th>
+            <th class="p-3">Month</th>
+            <th class="p-3">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% utilities.forEach(function(elem) { %>
+            <tr class="text-white">
+              <td class="p-3"><%= elem.date ? new Date(elem.date).toISOString().split('T')[0] : "N/A" %></td>
+              <td class="p-3"><%= elem.name %></td>
+              <td class="p-3"><%= elem.month %></td>
+              <td class="p-3"><%= elem.amount %></td>
+
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" 
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+  <script>
+  let table = new DataTable('#myTable',{
+      "pageLength": -1, // Show all entries
+    "lengthMenu": [[-1, 10, 20, 50, 100], ["All", 10, 20, 50, 100]] // Add "All" option in dropdown
+
+    });
+  </script>
+</body>
+
+</html>

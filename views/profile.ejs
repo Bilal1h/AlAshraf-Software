@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+    <style>
+        /* Hide unwanted DataTables elements */
+        .dataTables_length select, .dataTables_length select option, 
+        .dataTables_wrapper .dataTables_filter input, label,
+        div#myTable_info, div#myTable_paginate {
+            display: none;
+        }
+
+        /* Styling for the table */
+        #myTable {
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        #myTable th, #myTable td {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 95%;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <!-- Navbar -->
+    <nav class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
+        <span class="text-xl font-bold"><%= usernames.username %></span>
+        <a href="/logout" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition">Logout</a>
+    </nav>
+    
+    <div class="container mx-auto mt-8 p-4">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md overflow-hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Dashboard</h2>
+            <div class="overflow-x-auto">
+                <table id="myTable" class="w-full border border-gray-700 rounded-lg">
+                    <thead class="bg-gray-700 text-white">
+                        <tr>
+                            <th>Index</th>
+                            <th>Total Amount to be Collected</th>
+                            <th>Amount Received</th>
+                            <th>Amount Due</th>
+                            <th>Recovery Percentage</th>
+                            <th>Additional Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800">
+                        <tr class="border-b border-gray-700">
+                            <td>Current Month: <%=currentMonthAmount.name%></td>
+                            <td>Rs. <%=currentMonthAmount.ammount_to_be_collected%></td>
+                            <td>Rs. <%=currentMonthAmount.ammount_collected%></td>
+                            <td>Rs. <%=(currentMonthAmount.ammount_to_be_collected)-(currentMonthAmount.ammount_collected)%></td>
+                            <td><%=((currentMonthAmount.ammount_collected * 100)/(currentMonthAmount.ammount_to_be_collected)).toFixed(1)%>%</td>
+                            <td>
+                                <a href="/<%=currentYear%>/month/<%=currentMonth%>" class="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition">Manage</a>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-gray-700">
+                            <td>Last Month: <%=lastMonthAmount.name%></td>
+                            <td>Rs. <%=lastMonthAmount.ammount_to_be_collected%></td>
+                            <td>Rs. <%=lastMonthAmount.ammount_collected%></td>
+                            <td>Rs. <%=(lastMonthAmount.ammount_to_be_collected)-(lastMonthAmount.ammount_collected)%></td>
+                            <td><%=((lastMonthAmount.ammount_collected * 100)/(lastMonthAmount.ammount_to_be_collected)).toFixed(1)%>%</td>
+                            <td>
+                                <a href="/<%=currentYear%>/month/<%=lastMonthAmount.name%>" class="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition">Manage</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Current Year: <%=currentYear%></td>
+                            <td>Rs. <%=currentYearTotalAmount%></td>
+                            <td>Rs. <%=currentYearRecAmount%></td>
+                            <td>Rs. <%=currentYearDueAmount%></td>
+                            <td><%=currentYearPerAmount%>%</td>
+                            <td>
+                                <a href="/<%=currentYear%>/showallmonths" class="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition">Manage</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-3">Admin Tools</h2>
+            <ul class="list-disc pl-5">
+                <li><a href="/showcategories/<%=currentYear%>/<%=currentMonth%>" class="text-blue-400 hover:underline">Edit Houses</a></li>
+                <li><a href="/showcategories/<%=currentYear%>/<%=currentMonth%>" class="text-blue-400 hover:underline">Edit Maintenance Fee Plan</a></li>
+            </ul>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-3">Management Panel</h2>
+            <ul class="list-disc pl-5">
+                <li><a href="/manage-utils-expenses" class="text-blue-400 hover:underline">Manage Utility Bills/Expenses</a></li>
+                <li><a href="/<%=currentYear%>/manage-monthly-maintenance-fee" class="text-blue-400 hover:underline">Manage Monthly Maintenance Fee</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+    <script>
+        let table = new DataTable('#myTable', {
+            "ordering": false
+        });
+    </script>
+</body>
+</html>
